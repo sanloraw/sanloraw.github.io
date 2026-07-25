@@ -683,20 +683,26 @@ a{color:inherit;text-decoration:none}
   font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;
   color:var(--niebla);margin-bottom:var(--ma-xs);
 }
-.cierre__correo{
+/* Botón de contacto: la dirección no se escribe, va dentro del mailto.
+   Conserva el peso tipográfico que tenía el correo en grande, con un
+   marco que lo hace legible como botón. */
+.cierre__boton{
   font-family:var(--serif);font-weight:300;
-  font-size:clamp(1.5rem,1rem + 2.8vw,3.4rem);line-height:1.2;
+  font-size:clamp(1.3rem,.9rem + 2.2vw,2.6rem);line-height:1.1;
   display:inline-block;position:relative;
-  color:var(--sumi);transition:color var(--hover);
+  padding:.5em 1.2em;
+  border:1px solid var(--lino);
+  color:var(--sumi);
+  transition:color var(--hover), border-color var(--hover);
 }
-.cierre__correo::after{
-  content:'';position:absolute;left:0;bottom:-.1em;
+.cierre__boton::after{
+  content:'';position:absolute;left:0;bottom:0;
   width:100%;height:1px;background:var(--roble);
   transform:scaleX(0);transform-origin:right;
   transition:transform var(--media);
 }
-.cierre__correo:hover{color:var(--pino)}
-.cierre__correo:hover::after{transform:scaleX(1);transform-origin:left}
+.cierre__boton:hover{color:var(--pino);border-color:var(--ambar)}
+.cierre__boton:hover::after{transform:scaleX(1);transform-origin:left}
 
 /* ============================================
    REVELADO
@@ -741,7 +747,13 @@ a{color:inherit;text-decoration:none}
     overflow:visible;max-height:none;
     margin-block:0;padding-right:0;
   }
-  .barra__pie{display:none}
+  /* El pie de la barra sí se ve en móvil: es donde está Instagram, y el
+     móvil es justo desde donde más se busca. En una fila, para no comerse
+     el alto de la portada. */
+  .barra__pie{
+    flex-direction:row;align-items:center;justify-content:space-between;
+    gap:1rem;
+  }
   .barra__contacto{align-self:flex-start}
 
   .cuerpo{padding:var(--ma-s) clamp(1.5rem,5vw,2rem) var(--ma-m)}
@@ -758,6 +770,11 @@ a{color:inherit;text-decoration:none}
   .tesela__rotulo{opacity:1;transform:none}
 
   /* Zonas de toque más amplias en móvil (mín. cómodo ~44px) */
+  .barra__social a{
+    display:inline-flex;align-items:center;
+    min-height:44px;padding-inline:.8rem;
+    margin-left:-.8rem;   /* compensa el relleno para no descuadrar el pie */
+  }
   .grupo__boton{padding-block:1.1rem}
   .opcion{padding-block:.7rem}
   .barra__contacto{padding-block:.6rem}
@@ -910,8 +927,9 @@ a{color:inherit;text-decoration:none}
 
     <div class="barra__pie">
       <div class="barra__social">
-        <a href="#">IG</a>
-        <a href="#">BE</a>
+        <a href="https://www.instagram.com/sanlo.raw/"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Instagram de Sanlo (se abre en otra pestaña)">IG</a>
       </div>
       <span class="barra__copy">© 2026 Sanlo</span>
     </div>
@@ -938,7 +956,7 @@ a{color:inherit;text-decoration:none}
     <!-- CIERRE -->
     <footer class="cierre" id="contacto">
       <p class="cierre__intro al-entrar">Para encargos, copias o simplemente hablar</p>
-      <a href="mailto:hola@sanlo.raw" class="cierre__correo al-entrar">hola@sanlo.raw</a>
+      <a href="mailto:danielsanlorenzo9953@gmail.com" class="cierre__boton al-entrar">Contacto</a>
     </footer>
 
   </main>
