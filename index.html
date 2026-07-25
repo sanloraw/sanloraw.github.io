@@ -599,20 +599,39 @@ a{color:inherit;text-decoration:none}
 }
 .visor__figura img{
   max-width:100%;
-  max-height:76vh;
+  /* se descuenta el alto del pie: si no, en pantallas bajas la imagen se
+     queda con todo el sitio y la ficha se sale de la escena */
+  max-height:calc(76vh - 6rem);
   width:auto;height:auto;
   object-fit:contain;
   opacity:0;
   transition:opacity var(--media);
 }
 .visor__figura img.cargada{opacity:1}
+/* El pie del visor manda: dos alturas de lectura, el sitio arriba en
+   grande y la ficha técnica debajo */
 .visor__pie{
-  font-size:.72rem;letter-spacing:.16em;
-  color:var(--ceniza);text-align:center;
-  display:flex;gap:1rem;align-items:baseline;
+  display:flex;flex-direction:column;align-items:center;
+  gap:.8rem;text-align:center;
 }
-.visor__pie .lugar{color:var(--sumi)}
-.visor__pie .dato{color:var(--niebla);font-size:.64rem;letter-spacing:.12em}
+.visor__pie .lugar{
+  font-family:var(--serif);font-style:italic;
+  font-size:clamp(1.35rem,1.1rem + 1vw,2rem);
+  line-height:1;letter-spacing:.03em;
+  color:var(--sumi);
+  position:relative;padding-bottom:.75rem;
+}
+/* Filete en roble bajo el título, como el de la cabecera de la galería */
+.visor__pie .lugar::after{
+  content:'';position:absolute;left:50%;bottom:0;
+  width:34px;height:1px;margin-left:-17px;
+  background:var(--roble);
+}
+.visor__pie .lugar:empty{display:none}
+.visor__pie .dato{
+  font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--ceniza);
+}
 
 /* Flechas: ancladas a los bordes de la escena, en la misma posición
    siempre, independientes del tamaño de cada foto */
@@ -658,7 +677,7 @@ a{color:inherit;text-decoration:none}
   }
   .visor__flecha--prev{left:.6rem}
   .visor__flecha--next{right:.6rem}
-  .visor__figura img{max-height:70vh}
+  .visor__figura img{max-height:calc(70vh - 6rem)}
   /* Cerrar más grande y fácil de acertar */
   .visor__cerrar{width:40px;height:40px}
   .visor__barra{padding:1.2rem 1.4rem}
@@ -1377,11 +1396,21 @@ a{color:inherit;text-decoration:none}
     tanger:'Tánger', napoles:'Nápoles'
   };
 
-  function datosFoto(foto){
+  /* Parte el pie en dos: un título y una ficha técnica. Encabeza el lugar
+     y, mientras no lo hayas escrito, sube la ciudad a ese puesto para que
+     el pie nunca quede huérfano de título. */
+  function pieDeFoto(foto){
     const d = foto.dataset;
-    const partes = [ETIQUETAS[d.ciudad], ETIQUETAS[d.formato], ETIQUETAS[d.trato], d.camara]
-                     .filter(Boolean);
-    return partes.join(' · ');
+    const rotulo = foto.querySelector('.tesela__rotulo');
+    const lugar  = rotulo ? rotulo.textContent.trim() : '';
+    const ciudad = ETIQUETAS[d.ciudad] || '';
+    const resto  = [
+      lugar ? ciudad : null,     /* si el lugar encabeza, la ciudad baja */
+      ETIQUETAS[d.formato],
+      ETIQUETAS[d.trato],
+      d.camara
+    ].filter(Boolean);
+    return { titulo: lugar || ciudad, dato: resto.join(' · ') };
   }
 
   function mostrar(i){
@@ -1396,9 +1425,9 @@ a{color:inherit;text-decoration:none}
     visorImg.alt = img.alt || '';
     if(visorImg.complete) visorImg.classList.add('cargada');
 
-    const rotulo = foto.querySelector('.tesela__rotulo');
-    visorLugar.textContent = rotulo ? rotulo.textContent : '';
-    visorDato.textContent  = datosFoto(foto);
+    const pie = pieDeFoto(foto);
+    visorLugar.textContent = pie.titulo;
+    visorDato.textContent  = pie.dato;
     visorCuenta.textContent = `${i + 1} / ${visibles.length}`;
 
     btnPrev.disabled = i === 0;
