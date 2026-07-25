@@ -11,6 +11,17 @@
     { "tipo": "haiku", "versos": ["Grano, mancha,", "un dedo en el borde —", "así la quiero."] },
     { "tipo": "concepto", "kanji": "影", "nombre": "Kage · la sombra", "fondo": "sumi", "izq": true },
     { "tipo": "haiku", "versos": ["Se apaga el semáforo.", "Nadie sabe que esto", "fue lo último."], "der": true },
-    { "tipo": "concepto", "kanji": "侘", "nombre": "Wabi · lo sencillo", "fondo": "pino", "izq": true }
+    { "tipo": "concepto", "kanji": "侘", "nombre": "Wabi · lo sencillo", "fondo": "pino", "izq": true },
+    { "tipo": "concepto", "kanji": "余", "nombre": "Yohaku · el espacio vacío", "fondo": "papel" },
+    { "tipo": "haiku", "versos": ["Luz en el portal.", "Se cierra antes", "de que enfoque."] },
+    { "tipo": "concepto", "kanji": "儚", "nombre": "Hakanai · lo que apenas dura", "fondo": "sumi", "izq": true },
+    { "tipo": "haiku", "versos": ["Dos se cruzan.", "Ninguno sabe", "que ya están dentro."], "der": true },
+    { "tipo": "concepto", "kanji": "気", "nombre": "Kehai · la presencia que se intuye", "fondo": "pino" },
+    { "tipo": "haiku", "versos": ["Nadie en la plaza.", "El banco guarda", "la forma de alguien."] },
+    { "tipo": "concepto", "kanji": "会", "nombre": "Ichigo ichie · una vez y nunca más", "fondo": "papel", "izq": true },
+    { "tipo": "haiku", "versos": ["Sombra en la pared.", "Levanto la cámara:", "ya es otra."], "der": true },
+    { "tipo": "concepto", "kanji": "渋", "nombre": "Shibui · la belleza sin ruido", "fondo": "sumi" },
+    { "tipo": "haiku", "versos": ["Llueve en el cristal.", "La ciudad se deshace", "y sigue ahí."] },
+    { "tipo": "concepto", "kanji": "無", "nombre": "Mujō · lo que no permanece", "fondo": "pino", "izq": true }
   ]
 }
