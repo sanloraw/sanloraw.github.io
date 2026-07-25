@@ -385,7 +385,7 @@ a{color:inherit;text-decoration:none}
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:var(--junta);
-  align-items:start;        /* cada columna, su altura natural */
+  align-items:stretch;      /* las columnas igualan altura */
   padding:var(--junta);
   border:var(--bastidor) solid var(--lino);
   position:relative;
@@ -404,8 +404,16 @@ a{color:inherit;text-decoration:none}
   gap:var(--junta);
   min-width:0;
 }
-/* Ninguna pieza absorbe el sobrante: si una lo hiciera, el separador
-   que cerrase la columna se estiraría hasta comerse la retícula */
+/* Cuando una columna termina antes que las demás, el separador que la
+   cierra absorbe el hueco. Solo puede estirarse un separador —nunca una
+   fotografía, que se deformaría— y con tope, para que no se desmande
+   como ocurría cuando el sobrante iba a parar a la última pieza fuese
+   cual fuese. */
+.columna > .concepto:last-child,
+.columna > .haiku:last-child{
+  flex:1 1 auto;
+  max-height:480px;   /* del orden de la foto más alta: rellena sin dominar */
+}
 
 /* --- MODO FILTRADO ---
    Al elegir una opción, la vista se limpia por completo: fuera cabecera,
@@ -1108,9 +1116,9 @@ a{color:inherit;text-decoration:none}
       .map(lista => lista.map((f, i) => crearFoto(f, i === 0)));
 
     /* Los separadores son eso: separan. Van siempre en un hueco entre dos
-       fotografías, nunca al principio ni al final, así cada columna abre y
-       cierra con foto y no caen dos textos seguidos —tampoco al apilarse
-       las columnas en móvil.
+       fotografías, nunca el primero de la columna, así no caen dos textos
+       seguidos —tampoco al apilarse las columnas en móvil, porque toda
+       columna arranca con foto.
 
        Cuántos salen depende del número de fotos, no de una cifra fija: se
        reparten por turnos entre las columnas hasta llegar al objetivo, se
@@ -1135,6 +1143,15 @@ a{color:inherit;text-decoration:none}
       }
       if(!algunoEnEstaVuelta) break;   // ninguna columna tiene ya sitio
     }
+
+    /* Cada columna cierra con un separador. Además de rematarla, es la
+       pieza que se estira (ver el CSS) para rellenar el hueco cuando la
+       columna acaba antes que las demás. */
+    porColumna.forEach(col => {
+      if(reserva.length && col.length && esFoto(col[col.length - 1])){
+        col.push(crearTexto(reserva.pop()));
+      }
+    });
 
     porColumna.forEach((col, i) => col.forEach(el => colsEl[i].appendChild(el)));
   }
