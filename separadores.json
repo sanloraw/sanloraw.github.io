@@ -1,6 +1,6 @@
 {
   "ajustes": {
-    "maxPorColumna": 2
+    "fotosPorSeparador": 3
   },
   "separadores": [
     { "tipo": "concepto", "kanji": "間", "nombre": "Ma · el intervalo", "fondo": "pino" },

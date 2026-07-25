@@ -1092,7 +1092,9 @@ a{color:inherit;text-decoration:none}
     const MIS_FOTOS  = (datosFotos.photos || []).map(normalizarFoto);
     const MIS_TEXTOS = datosTextos.separadores || [];
     const ajustes    = datosTextos.ajustes || {};
-    const maxPorColumna = ajustes.maxPorColumna != null ? ajustes.maxPorColumna : 1;
+    /* Cuántas fotografías por cada separador. Al ser una proporción, el
+       número de textos crece solo según vas añadiendo fotos. */
+    const fotosPorSeparador = ajustes.fotosPorSeparador > 0 ? ajustes.fotosPorSeparador : 3;
 
     const colsEl = [
       document.querySelector('.columna--a'),
@@ -1105,21 +1107,34 @@ a{color:inherit;text-decoration:none}
     const porColumna = repartirFotos(MIS_FOTOS, 3)
       .map(lista => lista.map((f, i) => crearFoto(f, i === 0)));
 
-    /* Los separadores son eso: separan. Se coloca como mucho uno por
-       columna (maxPorColumna en separadores.json) y siempre en un hueco
-       entre dos fotografías, nunca al principio ni al final. Así cada
-       columna abre y cierra con foto, nunca caen dos textos seguidos
-       —tampoco al apilarse las columnas en móvil— y del total de textos
-       solo sale un puñado, distinto en cada carga. */
+    /* Los separadores son eso: separan. Van siempre en un hueco entre dos
+       fotografías, nunca al principio ni al final, así cada columna abre y
+       cierra con foto y no caen dos textos seguidos —tampoco al apilarse
+       las columnas en móvil.
+
+       Cuántos salen depende del número de fotos, no de una cifra fija: se
+       reparten por turnos entre las columnas hasta llegar al objetivo, se
+       agota la lista de textos o ninguna columna admite más. Los textos se
+       barajan, así que en cada carga sale un subconjunto distinto. */
+    const objetivo = Math.min(
+      MIS_TEXTOS.length,
+      Math.round(MIS_FOTOS.length / fotosPorSeparador)
+    );
     const reserva = barajar(MIS_TEXTOS);
-    porColumna.forEach(col => {
-      for(let n = 0; n < maxPorColumna; n++){
+    let puestos = 0;
+    while(puestos < objetivo && reserva.length){
+      let algunoEnEstaVuelta = false;
+      for(const col of porColumna){
+        if(puestos >= objetivo || !reserva.length) break;
         const huecos = huecosLibres(col);
-        if(!huecos.length || !reserva.length) break;
+        if(!huecos.length) continue;
         const pos = huecos[Math.floor(Math.random() * huecos.length)];
         col.splice(pos, 0, crearTexto(reserva.pop()));
+        puestos++;
+        algunoEnEstaVuelta = true;
       }
-    });
+      if(!algunoEnEstaVuelta) break;   // ninguna columna tiene ya sitio
+    }
 
     porColumna.forEach((col, i) => col.forEach(el => colsEl[i].appendChild(el)));
   }
