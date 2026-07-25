@@ -385,7 +385,7 @@ a{color:inherit;text-decoration:none}
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:var(--junta);
-  align-items:stretch;      /* las columnas igualan altura */
+  align-items:start;        /* cada columna, su altura natural */
   padding:var(--junta);
   border:var(--bastidor) solid var(--lino);
   position:relative;
@@ -404,9 +404,8 @@ a{color:inherit;text-decoration:none}
   gap:var(--junta);
   min-width:0;
 }
-/* La última pieza absorbe el sobrante, de modo que ninguna
-   columna termine antes que las demás */
-.columna > *:last-child{flex:1 1 auto}
+/* Ninguna pieza absorbe el sobrante: si una lo hiciera, el separador
+   que cerrase la columna se estiraría hasta comerse la retícula */
 
 /* --- MODO FILTRADO ---
    Al elegir una opción, la vista se limpia por completo: fuera cabecera,
@@ -472,12 +471,12 @@ a{color:inherit;text-decoration:none}
   text-align:right;
   gap:.45rem;
   padding:var(--ma-xs);
-  min-height:150px;
+  min-height:110px;
 }
 .concepto__kanji{
   font-family:var(--serif);
   font-style:italic;
-  font-size:1.7rem;
+  font-size:1.5rem;
   line-height:1;
 }
 .concepto__glosa{
@@ -526,13 +525,13 @@ a{color:inherit;text-decoration:none}
   justify-content:center;
   gap:.9rem;
   padding:var(--ma-xs) 1rem;
-  min-height:170px;
+  min-height:110px;
 }
 .haiku p{
   font-family:var(--serif);
   font-style:italic;
-  font-size:clamp(.95rem,.85rem + .4vw,1.2rem);
-  line-height:1.55;
+  font-size:clamp(.88rem,.82rem + .3vw,1.05rem);
+  line-height:1.5;
   color:var(--sumi);
 }
 .haiku p span{display:block}
@@ -916,7 +915,7 @@ a{color:inherit;text-decoration:none}
 
     <div class="cabecera">
       <div class="cabecera__meta">
-        <span data-cuenta>7 fotografías</span>
+        <span data-cuenta>28 fotografías</span>
       </div>
     </div>
 
@@ -981,8 +980,33 @@ a{color:inherit;text-decoration:none}
       ciudad:  (p.city || '').toLowerCase(),
       formato: p.capture_type,
       color:   p.color_mode,
-      camara:  p.camera || ''
+      camara:  p.camera || '',
+      ancho:   p.width,
+      alto:    p.height
     };
+  }
+
+  /* Proporción alto/ancho de una foto: con ella se estima cuánto ocupará
+     en la columna antes de que la imagen llegue a cargarse */
+  function proporcion(f){
+    return (f.ancho && f.alto) ? f.alto / f.ancho : 0.75;
+  }
+
+  /* Reparte las fotos entre las columnas buscando que todas queden de
+     alto parecido: coloca primero las más altas y cada una va a la
+     columna que de momento va más corta. Un reparto por turnos amontona
+     las verticales en la misma columna y deja el mosaico cojo.
+     Después cada columna recupera el orden del JSON. */
+  function repartirFotos(lista, nCols){
+    const cubos = Array.from({ length:nCols }, () => ({ alto:0, indices:[] }));
+    lista.map((f, i) => ({ f, i }))
+         .sort((a, b) => proporcion(b.f) - proporcion(a.f))
+         .forEach(({ f, i }) => {
+           const corta = cubos.reduce((min, c) => c.alto < min.alto ? c : min);
+           corta.indices.push(i);
+           corta.alto += proporcion(f);
+         });
+    return cubos.map(c => c.indices.sort((a, b) => a - b).map(i => lista[i]));
   }
 
   /* Crea el elemento de una foto */
@@ -1034,6 +1058,19 @@ a{color:inherit;text-decoration:none}
     return div;
   }
 
+  function esFoto(el){ return el.classList.contains('tesela--foto'); }
+
+  /* Posiciones de una columna donde cabe un separador: solo entre dos
+     fotografías. Al exigir foto a ambos lados, dos separadores nunca
+     pueden quedar pegados ni asomar al principio o al final. */
+  function huecosLibres(col){
+    const libres = [];
+    for(let i = 1; i < col.length; i++){
+      if(esFoto(col[i - 1]) && esFoto(col[i])) libres.push(i);
+    }
+    return libres;
+  }
+
   /* Baraja una copia del array (Fisher-Yates) */
   function barajar(lista){
     const a = lista.slice();
@@ -1056,6 +1093,8 @@ a{color:inherit;text-decoration:none}
     ]);
     const MIS_FOTOS  = (datosFotos.photos || []).map(normalizarFoto);
     const MIS_TEXTOS = datosTextos.separadores || [];
+    const ajustes    = datosTextos.ajustes || {};
+    const maxPorColumna = ajustes.maxPorColumna != null ? ajustes.maxPorColumna : 1;
 
     const colsEl = [
       document.querySelector('.columna--a'),
@@ -1064,31 +1103,23 @@ a{color:inherit;text-decoration:none}
     ];
     colsEl.forEach(c => c.innerHTML = '');
 
-    /* fotos repartidas por turnos entre las tres columnas */
-    const porColumna = [[], [], []];
-    MIS_FOTOS.forEach((f, i) => {
-      porColumna[i % 3].push(crearFoto(f, i < 3));
-    });
+    /* fotos repartidas entre las tres columnas, equilibrando el alto */
+    const porColumna = repartirFotos(MIS_FOTOS, 3)
+      .map(lista => lista.map((f, i) => crearFoto(f, i === 0)));
 
-    /* textos barajados y repartidos entre columnas, cada uno insertado
-       en una posición aleatoria dentro de su columna */
-    barajar(MIS_TEXTOS).forEach((t, i) => {
-      const col = porColumna[i % 3];
-      const el  = crearTexto(t);
-      const pos = Math.floor(Math.random() * (col.length + 1));
-      col.splice(pos, 0, el);
-    });
-
-    /* evita que una columna termine en foto (al estirarse se deformaría):
-       si acaba en foto y hay textos, mueve un texto al final */
+    /* Los separadores son eso: separan. Se coloca como mucho uno por
+       columna (maxPorColumna en separadores.json) y siempre en un hueco
+       entre dos fotografías, nunca al principio ni al final. Así cada
+       columna abre y cierra con foto, nunca caen dos textos seguidos
+       —tampoco al apilarse las columnas en móvil— y del total de textos
+       solo sale un puñado, distinto en cada carga. */
+    const reserva = barajar(MIS_TEXTOS);
     porColumna.forEach(col => {
-      const ultimo = col[col.length - 1];
-      if(ultimo && ultimo.classList.contains('tesela--foto')){
-        const idxTexto = col.findIndex(x => !x.classList.contains('tesela--foto'));
-        if(idxTexto !== -1){
-          const [texto] = col.splice(idxTexto, 1);
-          col.push(texto);
-        }
+      for(let n = 0; n < maxPorColumna; n++){
+        const huecos = huecosLibres(col);
+        if(!huecos.length || !reserva.length) break;
+        const pos = huecos[Math.floor(Math.random() * huecos.length)];
+        col.splice(pos, 0, crearTexto(reserva.pop()));
       }
     });
 

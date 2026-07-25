@@ -1,2 +1,6 @@
 .claude/
 fotos/_sin-clasificar/
+
+# Los JPEG a resolución completa: pesan 123 MB y la web usa los .webp.
+# Se quedan aquí como copia de trabajo, fuera del repositorio.
+fotos/_originales/

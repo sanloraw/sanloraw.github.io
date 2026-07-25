@@ -1,4 +1,7 @@
 {
+  "ajustes": {
+    "maxPorColumna": 2
+  },
   "separadores": [
     { "tipo": "concepto", "kanji": "間", "nombre": "Ma · el intervalo", "fondo": "pino" },
     { "tipo": "haiku", "versos": ["Alguien dobla", "la esquina —", "ya no vuelve."] },
