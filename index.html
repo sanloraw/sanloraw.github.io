@@ -350,37 +350,13 @@ a{color:inherit;text-decoration:none}
 }
 
 .cabecera{
-  display:flex;align-items:baseline;justify-content:space-between;
+  display:flex;align-items:baseline;justify-content:flex-end;
   gap:var(--ma-s);flex-wrap:wrap;margin-bottom:var(--ma-xs);
-}
-.cabecera__titulo{
-  font-family:var(--serif);font-style:italic;
-  font-size:1.05rem;font-weight:400;
-  letter-spacing:.14em;text-transform:uppercase;
-  color:var(--sumi);position:relative;padding-bottom:.7rem;
-}
-.cabecera__titulo::after{
-  content:'';position:absolute;left:0;bottom:0;
-  width:22px;height:2px;background:var(--sumi);
-}
-.cabecera__titulo::before{
-  content:'';position:absolute;left:28px;bottom:1px;
-  width:60px;height:1px;background:var(--lino);
 }
 .cabecera__meta{
   display:flex;align-items:center;gap:1.2rem;
   font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;
   color:var(--niebla);
-}
-.cabecera__raya{display:block;width:44px;height:1px;background:var(--lino)}
-/* La pista se lee como indicación, no como dato: cursiva serif, sin caja */
-.cabecera__pista{
-  font-family:var(--serif);
-  font-style:italic;
-  font-size:.92rem;
-  letter-spacing:.02em;
-  text-transform:none;
-  color:var(--ceniza);
 }
 
 /* En modo filtrado la cabecera se retira: solo fotos.
@@ -764,7 +740,6 @@ a{color:inherit;text-decoration:none}
 
   .cuerpo{padding:var(--ma-s) clamp(1.5rem,5vw,2rem) var(--ma-m)}
   .cabecera__meta{font-size:.62rem;gap:.8rem}
-  .cabecera__pista{display:none}
 
   .mosaico{grid-template-columns:1fr}
   .columna--c{display:flex}
@@ -940,10 +915,7 @@ a{color:inherit;text-decoration:none}
   <main class="cuerpo">
 
     <div class="cabecera">
-      <h2 class="cabecera__titulo">Calle, sin guion</h2>
       <div class="cabecera__meta">
-        <span class="cabecera__pista">Filtra por formato, ciudad o tratamiento</span>
-        <span class="cabecera__raya" aria-hidden="true"></span>
         <span data-cuenta>7 fotografías</span>
       </div>
     </div>
