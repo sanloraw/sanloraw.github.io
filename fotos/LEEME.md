@@ -1,24 +1,28 @@
 # Cómo añadir fotos
 
-No hace falta tocar el HTML ni saber programar. Solo dos pasos:
+No hace falta tocar el HTML ni saber programar. Solo dos pasos.
 
-## 1. Coloca el archivo en la carpeta correcta
+(Los filtros de Formato/Ciudad/Tratamiento están en pausa por ahora — se
+retomarán más adelante con un JSON propio. De momento las fotos solo se
+agrupan por categoría/proyecto.)
+
+## 1. Coloca el archivo en la carpeta de su categoría
 
 ```
-fotos/<ciudad>/<formato>/<color>/archivo.jpg
+fotos/<categoria>/archivo.jpg
 ```
 
-- `ciudad`: el nombre que quieras (madrid, lisboa, tanger, roma...). Si es una
-  ciudad nueva que no está en `NOMBRES_CIUDAD` dentro de `index.html`, se
-  mostrará igual en el filtro, con la primera letra en mayúscula.
-- `formato`: `digital` o `analogico`
-- `color`: `bn` (blanco y negro) o `color`
+`categoria` es el nombre del proyecto o serie al que pertenece la foto —
+tú eliges el nombre de la carpeta (por ejemplo `retratos`, `madrid-2025`,
+`analogico`...). Cada categoría se muestra seguida de un separador (un
+haiku o un concepto japonés) antes de pasar a la siguiente.
 
 Ejemplo:
 
 ```
-fotos/madrid/analogico/bn/lavapies.jpg
-fotos/lisboa/digital/color/alfama.jpg
+fotos/retratos/lavapies.jpg
+fotos/retratos/atocha.jpg
+fotos/nocturnas/sol.jpg
 ```
 
 ## 2. Añade una línea en `manifest.json`
@@ -28,19 +32,24 @@ quieres que aparezca sobre la imagen:
 
 ```json
 [
-  { "ruta": "madrid/analogico/bn/lavapies.jpg", "lugar": "Lavapiés" },
-  { "ruta": "lisboa/digital/color/alfama.jpg",  "lugar": "Alfama" }
+  { "ruta": "retratos/lavapies.jpg", "lugar": "Lavapiés" },
+  { "ruta": "retratos/atocha.jpg",   "lugar": "Atocha" },
+  { "ruta": "nocturnas/sol.jpg",     "lugar": "Sol, 19:40" }
 ]
 ```
 
-El orden de la lista es el orden en que aparecen en la galería. Cuidado con
-las comas: cada objeto va separado por coma, excepto el último.
+El **orden de la lista** es el orden en que aparecen las categorías y sus
+fotos en la galería: la primera vez que aparece una categoría nueva marca
+dónde empieza ese grupo. Cuidado con las comas: cada objeto va separado por
+coma, excepto el último.
 
-## Ciudad, formato y tratamiento se deducen solos
+## El separador entre categorías
 
-El filtro "Ciudad" de la barra lateral, y los contadores de cada opción, se
-generan automáticamente a partir de las fotos que haya en el manifiesto — no
-hay que editar el HTML para añadir una ciudad nueva.
+Los haikus y conceptos japoneses ya están escritos en `index.html` (busca
+`MIS_TEXTOS`). Se van asignando en ese mismo orden a cada cambio de
+categoría — la primera categoría no lleva separador delante, solo se
+inserta uno ENTRE una categoría y la siguiente. Si quieres cambiar el texto
+de un separador concreto, edita ese array directamente.
 
 ## Previsualizar en local
 
@@ -58,5 +67,6 @@ En GitHub Pages funciona sin nada especial, porque se sirve por `https://`.
 ## Carpeta `_sin-clasificar/`
 
 Ahí están las fotos que aún no se han organizado ni añadido al manifiesto.
-No aparecen en la web hasta que las muevas a su carpeta de ciudad/formato/
-color y las incluyas en `manifest.json`.
+No aparecen en la web hasta que las muevas a su carpeta de categoría y las
+incluyas en `manifest.json`. Esta carpeta no se sube a GitHub (está en
+`.gitignore`).
