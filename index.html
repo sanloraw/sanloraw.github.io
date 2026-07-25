@@ -816,10 +816,74 @@ a{color:inherit;text-decoration:none}
       </button>
     </div>
 
-    <!-- Los filtros (Formato / Ciudad / Tratamiento) se han retirado
-         de momento. Volverán más adelante dirigidos por un JSON aparte;
-         mientras tanto las fotos solo se agrupan por carpeta de categoría
-         (ver fotos/manifest.json y fotos/LEEME.md). -->
+    <div class="filtros">
+
+      <!-- FORMATO — excluyente -->
+      <div class="grupo">
+        <button class="grupo__boton" aria-expanded="false" aria-controls="p-formato">
+          Formato
+          <span class="grupo__signo" aria-hidden="true"></span>
+        </button>
+        <div class="grupo__panel" id="p-formato">
+          <div class="grupo__lista">
+            <div class="grupo__interior" role="group" aria-label="Formato">
+              <button class="opcion" data-eje="formato" data-valor="digital" aria-pressed="false">
+                Digital
+                <span class="opcion__cuenta">4</span>
+              </button>
+              <button class="opcion" data-eje="formato" data-valor="analogico" aria-pressed="false">
+                Analógico
+                <span class="opcion__cuenta">3</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CIUDAD — acumulable -->
+      <div class="grupo">
+        <button class="grupo__boton" aria-expanded="false" aria-controls="p-ciudad">
+          Ciudad
+          <span class="grupo__signo" aria-hidden="true"></span>
+        </button>
+        <div class="grupo__panel" id="p-ciudad">
+          <div class="grupo__lista">
+            <div class="grupo__interior" role="group" aria-label="Ciudad">
+              <!-- Añade aquí un botón por cada ciudad que uses en MIS_FOTOS,
+                   con data-valor igual al campo "ciudad" de esa foto -->
+              <button class="opcion" data-eje="ciudad" data-valor="madrid" aria-pressed="false">
+                Madrid
+                <span class="opcion__cuenta">7</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRATAMIENTO — excluyente -->
+      <div class="grupo">
+        <button class="grupo__boton" aria-expanded="false" aria-controls="p-trato">
+          Tratamiento
+          <span class="grupo__signo" aria-hidden="true"></span>
+        </button>
+        <div class="grupo__panel" id="p-trato">
+          <div class="grupo__lista">
+            <div class="grupo__interior" role="group" aria-label="Tratamiento">
+              <button class="opcion" data-eje="trato" data-valor="bn" aria-pressed="false">
+                Blanco y negro
+                <span class="opcion__cuenta">5</span>
+              </button>
+              <button class="opcion" data-eje="trato" data-valor="color" aria-pressed="false">
+                Color
+                <span class="opcion__cuenta">2</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="filtros__limpiar" type="button">Quitar filtros</button>
+    </div>
 
     <a href="#contacto" class="barra__contacto">Contacto</a>
 
@@ -838,12 +902,13 @@ a{color:inherit;text-decoration:none}
     <div class="cabecera">
       <h2 class="cabecera__titulo">Calle, sin guion</h2>
       <div class="cabecera__meta">
+        <span class="cabecera__pista">Filtra por formato, ciudad o tratamiento</span>
         <span class="cabecera__raya" aria-hidden="true"></span>
-        <span data-cuenta>Cargando…</span>
+        <span data-cuenta>7 fotografías</span>
       </div>
     </div>
 
-    <p id="aviso-fotos" class="sr-solo" aria-live="polite" role="status"></p>
+    <p id="aviso-filtros" class="sr-solo" aria-live="polite" role="status"></p>
 
     <!-- MOSAICO -->
     <section class="mosaico" id="mosaico" aria-label="Fotografías">
@@ -881,52 +946,39 @@ a{color:inherit;text-decoration:none}
 </div>
 
 <script>
-(async function(){
+(function(){
   'use strict';
 
   /* ══════════════════════════════════════════════════════════════════
      ⬇  TUS FOTOS  ⬇
-     Ya no se escriben aquí. Para añadir o cambiar fotos:
+     Aquí es lo ÚNICO que necesitas tocar para añadir o cambiar fotos.
 
-       1. Copia el archivo dentro de fotos/, en la ruta:
-            fotos/<ciudad>/<formato>/<color>/archivo.jpg
-          donde formato es "digital" o "analogico", y color es "bn" o "color".
-          Ejemplo: fotos/madrid/analogico/bn/lavapies.jpg
+     Copia una línea, pégala, y edita los datos entre comillas.
+     Cada foto tiene:
 
-       2. Añade una línea en fotos/manifest.json con la ruta (sin "fotos/")
-          y el texto que quieres que aparezca sobre la foto:
-            { "ruta":"madrid/analogico/bn/lavapies.jpg", "lugar":"Lavapiés" }
+       archivo  : nombre del archivo, dentro de la carpeta "fotos/"
+       lugar    : el texto que aparece sobre la foto (barrio, ciudad…)
+       ciudad   : una de → madrid, lisboa, oporto, tanger, napoles
+       formato  : digital  o  analogico
+       color    : "bn" si es blanco y negro,  "color" si es en color
 
-     La categoría (el proyecto) se deduce sola del nombre de la carpeta.
-     Ver fotos/LEEME.md para más detalle.
+     El orden de la lista es el orden en que se ven en la galería.
+     No hace falta saber programar: respeta las comillas y las comas.
      ══════════════════════════════════════════════════════════════════ */
 
-  const MANIFIESTO = "fotos/manifest.json";
+  const MIS_FOTOS = [
+    /* Datos provisionales: cambia "lugar", "ciudad", "formato" y "color"
+       por los reales de cada foto. */
+    { archivo:"IMG_1967.jpg", lugar:"", ciudad:"madrid", formato:"digital",   color:"bn"    },
+    { archivo:"IMG_2639.jpg", lugar:"", ciudad:"madrid", formato:"digital",   color:"bn"    },
+    { archivo:"IMG_4044.jpg", lugar:"", ciudad:"madrid", formato:"digital",   color:"color" },
+    { archivo:"IMG_4056.jpg", lugar:"", ciudad:"madrid", formato:"digital",   color:"bn"    },
+    { archivo:"IMG_4178.jpg", lugar:"", ciudad:"madrid", formato:"analogico", color:"bn"    },
+    { archivo:"IMG_4300.jpg", lugar:"", ciudad:"madrid", formato:"analogico", color:"color" },
+    { archivo:"IMG_4337.jpg", lugar:"", ciudad:"madrid", formato:"analogico", color:"bn"    },
+  ];
 
-  /* Nombres bonitos para categorías conocidas; cualquier otra carpeta que
-     no esté aquí se muestra igual, con su nombre capitalizado */
-  const NOMBRES_CATEGORIA = {};
-
-  function nombreCategoria(clave){
-    if(NOMBRES_CATEGORIA[clave]) return NOMBRES_CATEGORIA[clave];
-    return clave.charAt(0).toUpperCase() + clave.slice(1).replace(/-/g, ' ');
-  }
-
-  /* Convierte una entrada del manifiesto en el objeto de foto que
-     usa el resto del script, deduciendo la categoría de la ruta */
-  function entradaAFoto(entrada){
-    const [categoria] = entrada.ruta.split('/');
-    return {
-      archivo: entrada.ruta,
-      lugar: entrada.lugar || '',
-      categoria
-    };
-  }
-
-  /* ── Textos japoneses que separan cada categoría de la siguiente ──
-     Se van asignando en este orden a medida que aparece una categoría
-     nueva en el manifiesto (la 1ª categoría no lleva separador delante,
-     solo se inserta uno ENTRE una categoría y la siguiente).
+  /* ── Textos japoneses intercalados en la galería (portada) ──
      Puedes cambiar el kanji, el nombre o los versos. Tipos:
        "concepto" → kanji + nombre (fondo pino, sumi o papel)
        "haiku"    → tres versos                                    */
@@ -954,11 +1006,14 @@ a{color:inherit;text-decoration:none}
   function crearFoto(f, prioritaria){
     const fig = document.createElement('figure');
     fig.className = 'tesela tesela--foto al-entrar';
-    fig.dataset.categoria = f.categoria;
+    fig.dataset.formato = f.formato;
+    fig.dataset.ciudad  = f.ciudad;
+    fig.dataset.trato   = f.color;
 
     const img = document.createElement('img');
     img.src = CARPETA + f.archivo;
     img.alt = f.lugar || '';
+    if(f.color === 'bn') img.classList.add('mono');
     img.loading = prioritaria ? 'eager' : 'lazy';
     /* Si defines ancho/alto reales, evitas saltos al cargar (opcional) */
     if(f.ancho && f.alto){ img.width = f.ancho; img.height = f.alto; }
@@ -995,46 +1050,19 @@ a{color:inherit;text-decoration:none}
     return div;
   }
 
-  /* Agrupa las fotos por categoría (la carpeta), conservando el orden
-     en que cada categoría aparece por primera vez en el manifiesto, y el
-     orden relativo de sus fotos dentro de esa categoría */
-  function agruparPorCategoria(fotos){
-    const grupos = new Map();
-    fotos.forEach(f => {
-      if(!grupos.has(f.categoria)) grupos.set(f.categoria, []);
-      grupos.get(f.categoria).push(f);
-    });
-    return grupos;
+  /* Baraja una copia del array (Fisher-Yates) */
+  function barajar(lista){
+    const a = lista.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
   }
 
-  /* Construye la secuencia final de teselas: las fotos de una categoría,
-     seguidas de un separador (el siguiente haiku/concepto de la lista),
-     seguidas de las fotos de la categoría siguiente, y así hasta el final.
-     La última categoría no lleva separador detrás. */
-  function construirSecuencia(fotos){
-    const grupos = agruparPorCategoria(fotos);
-    const categorias = Array.from(grupos.keys());
-    const secuencia = [];
-    let prioritarias = 0;
-
-    categorias.forEach((categoria, i) => {
-      grupos.get(categoria).forEach(f => {
-        secuencia.push(crearFoto(f, prioritarias < 3));
-        prioritarias++;
-      });
-      const esUltima = i === categorias.length - 1;
-      if(!esUltima && MIS_TEXTOS.length){
-        const texto = MIS_TEXTOS[i % MIS_TEXTOS.length];
-        secuencia.push(crearTexto(texto));
-      }
-    });
-
-    return secuencia;
-  }
-
-  /* Reparte la secuencia (fotos + separadores) por turnos entre las
-     tres columnas, en orden, para que cada categoría y su separador
-     queden agrupados de forma natural */
+  /* Reparte fotos y textos en las tres columnas de forma pareja,
+     intercalando los separadores (conceptos y haikus) en una
+     posición al azar dentro de cada columna, distinta en cada carga */
   function construirMosaico(){
     const colsEl = [
       document.querySelector('.columna--a'),
@@ -1043,12 +1071,23 @@ a{color:inherit;text-decoration:none}
     ];
     colsEl.forEach(c => c.innerHTML = '');
 
-    const secuencia = construirSecuencia(MIS_FOTOS);
+    /* fotos repartidas por turnos entre las tres columnas */
     const porColumna = [[], [], []];
-    secuencia.forEach((el, i) => porColumna[i % 3].push(el));
+    MIS_FOTOS.forEach((f, i) => {
+      porColumna[i % 3].push(crearFoto(f, i < 3));
+    });
+
+    /* textos barajados y repartidos entre columnas, cada uno insertado
+       en una posición aleatoria dentro de su columna */
+    barajar(MIS_TEXTOS).forEach((t, i) => {
+      const col = porColumna[i % 3];
+      const el  = crearTexto(t);
+      const pos = Math.floor(Math.random() * (col.length + 1));
+      col.splice(pos, 0, el);
+    });
 
     /* evita que una columna termine en foto (al estirarse se deformaría):
-       si acaba en foto y hay algún separador en esa columna, lo mueve al final */
+       si acaba en foto y hay textos, mueve un texto al final */
     porColumna.forEach(col => {
       const ultimo = col[col.length - 1];
       if(ultimo && ultimo.classList.contains('tesela--foto')){
@@ -1061,19 +1100,6 @@ a{color:inherit;text-decoration:none}
     });
 
     porColumna.forEach((col, i) => col.forEach(el => colsEl[i].appendChild(el)));
-  }
-
-  /* ---------- Carga de fotos desde fotos/manifest.json ---------- */
-  let MIS_FOTOS = [];
-  try {
-    const entradas = await fetch(MANIFIESTO).then(r => r.json());
-    MIS_FOTOS = entradas.map(entradaAFoto);
-  } catch (err) {
-    /* Si abres el archivo con doble clic (file://) el navegador bloquea
-       fetch() de archivos locales: usa un servidor local para previsualizar
-       (ej. la extensión "Live Server" o `npx serve`). En GitHub Pages
-       funciona sin nada especial. */
-    console.warn('No se pudo cargar fotos/manifest.json:', err);
   }
 
   construirMosaico();
@@ -1097,13 +1123,26 @@ a{color:inherit;text-decoration:none}
     elementos.forEach(el => observador.observe(el));
   }
 
-  /* ---------- Orden de lectura del mosaico (para el visor) ---------- */
-  const mosaico  = document.getElementById('mosaico');
-  const columnas = Array.from(mosaico.querySelectorAll('.columna'));
-  const fotos    = Array.from(document.querySelectorAll('[data-categoria]'));
+  /* ---------- Desplegables ---------- */
+  document.querySelectorAll('.grupo__boton').forEach(boton => {
+    boton.addEventListener('click', () => {
+      const abierto = boton.getAttribute('aria-expanded') === 'true';
+      boton.setAttribute('aria-expanded', String(!abierto));
+    });
+  });
 
-  /* Anota la posición de cada tesela (columna, orden) para poder
-     recorrer las fotos en orden de lectura dentro del visor */
+  /* ---------- Filtrado ---------- */
+  const EXCLUYENTES = ['formato','trato'];   // una opción a la vez
+  const estado = { formato:null, ciudad:new Set(), trato:null };
+
+  const fotos   = Array.from(document.querySelectorAll('[data-formato]'));
+  const opciones = Array.from(document.querySelectorAll('.opcion'));
+  const limpiar = document.querySelector('.filtros__limpiar');
+  const mosaico = document.getElementById('mosaico');
+  const columnas = Array.from(mosaico.querySelectorAll('.columna'));
+
+  /* Anota la posición original de cada tesela para poder restaurarla
+     al quitar los filtros */
   columnas.forEach((col, ci) => {
     Array.from(col.children).forEach((hijo, hi) => {
       hijo.dataset.colOrigen = ci;
@@ -1111,22 +1150,112 @@ a{color:inherit;text-decoration:none}
     });
   });
 
+  /* Orden global de una foto (columna, posición) para apilarlas de forma
+     coherente en la vista filtrada */
   function ordenGlobal(el){
     return (+el.dataset.colOrigen) * 100 + (+el.dataset.ordenOrigen);
   }
 
-  const visibles = fotos.slice().sort((a, b) => ordenGlobal(a) - ordenGlobal(b));
-  visibles.forEach((foto, i) => { foto.dataset.indiceVisor = i; });
+  /* Lista de fotos que el visor puede recorrer, en orden de mosaico.
+     En la portada son todas; con filtros, las que encajan. */
+  let visibles = [];
 
-  const aviso = document.getElementById('aviso-fotos');
+  function recalcularVisibles(){
+    visibles = fotos
+      .filter(f => encaja(f))
+      .sort((a, b) => ordenGlobal(a) - ordenGlobal(b));
+    visibles.forEach((foto, i) => { foto.dataset.indiceVisor = i; });
+  }
+
+  function apilarEnColumna(){
+    /* en modo filtrado, además de recorrerlas, se apilan en una columna */
+    visibles.forEach(foto => columnas[0].appendChild(foto));
+  }
+
+  function restaurarColumnas(){
+    /* devuelve cada tesela a su columna y orden originales */
+    const todas = Array.from(mosaico.querySelectorAll('[data-col-origen]'));
+    todas.sort((a, b) =>
+      (a.dataset.colOrigen - b.dataset.colOrigen) ||
+      (a.dataset.ordenOrigen - b.dataset.ordenOrigen)
+    );
+    todas.forEach(el => {
+      columnas[+el.dataset.colOrigen].appendChild(el);
+    });
+  }
+
+  function hayFiltros(){
+    return estado.formato !== null || estado.trato !== null || estado.ciudad.size > 0;
+  }
+
+  function encaja(foto){
+    if(estado.formato && foto.dataset.formato !== estado.formato) return false;
+    if(estado.trato   && foto.dataset.trato   !== estado.trato)   return false;
+    if(estado.ciudad.size && !estado.ciudad.has(foto.dataset.ciudad)) return false;
+    return true;
+  }
+
+  function aplicar(){
+    const activos = hayFiltros();
+
+    restaurarColumnas();
+    recalcularVisibles();
+    if(activos) apilarEnColumna();
+
+    fotos.forEach(foto => { foto.hidden = !encaja(foto); });
+    limpiar.classList.toggle('activo', activos);
+    mosaico.classList.toggle('filtrando', activos);
+    document.querySelector('.cuerpo').classList.toggle('filtrando', activos);
+    /* Las teselas de conceptos/haikus/archivo NO aparecen al filtrar:
+       son exclusivas de la portada */
+    mosaico.querySelectorAll('.concepto, .haiku').forEach(t => {
+      t.hidden = activos;
+    });
+    anunciar();
+  }
+
+  const aviso = document.getElementById('aviso-filtros');
   const cuentaVisible = document.querySelector('[data-cuenta]');
-  const textoCuenta = `${fotos.length} ${fotos.length === 1 ? 'fotografía' : 'fotografías'}`;
-  if(aviso) aviso.textContent = textoCuenta;
-  if(cuentaVisible) cuentaVisible.textContent = textoCuenta;
+  function anunciar(){
+    const n = fotos.filter(f => !f.hidden).length;
+    const texto = hayFiltros()
+      ? `${n} ${n === 1 ? 'fotografía' : 'fotografías'} tras aplicar los filtros`
+      : `${fotos.length} fotografías`;
+    aviso.textContent = texto;
+    if(cuentaVisible) cuentaVisible.textContent = `${fotos.length} fotografías`;
+  }
 
-  /* El nombre SANLO devuelve a la portada */
+  opciones.forEach(op => {
+    op.addEventListener('click', () => {
+      const eje = op.dataset.eje, valor = op.dataset.valor;
+      const activa = op.getAttribute('aria-pressed') === 'true';
+
+      if(EXCLUYENTES.includes(eje)){
+        opciones.filter(o => o.dataset.eje === eje)
+                .forEach(o => o.setAttribute('aria-pressed','false'));
+        estado[eje] = activa ? null : valor;
+        if(!activa) op.setAttribute('aria-pressed','true');
+      } else {
+        if(activa){ estado.ciudad.delete(valor); op.setAttribute('aria-pressed','false'); }
+        else      { estado.ciudad.add(valor);    op.setAttribute('aria-pressed','true');  }
+      }
+      aplicar();
+    });
+  });
+
+  function quitarFiltros(){
+    estado.formato = null; estado.trato = null; estado.ciudad.clear();
+    opciones.forEach(o => o.setAttribute('aria-pressed','false'));
+    aplicar();
+  }
+
+  limpiar.addEventListener('click', quitarFiltros);
+
+  /* El nombre SANLO devuelve a la portada: quita los filtros y sube arriba */
   const volverInicio = document.getElementById('volver-inicio');
   volverInicio.addEventListener('click', () => {
+    const habiaFiltros = hayFiltros();
+    if(habiaFiltros) quitarFiltros();
     const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     window.scrollTo({ top:0, behavior: suave ? 'smooth' : 'auto' });
   });
@@ -1144,8 +1273,18 @@ a{color:inherit;text-decoration:none}
   let indiceActual = 0;
   let ultimoFoco   = null;
 
+  const ETIQUETAS = {
+    digital:'Digital', analogico:'Analógico',
+    bn:'Blanco y negro', color:'Color',
+    madrid:'Madrid', lisboa:'Lisboa', oporto:'Oporto',
+    tanger:'Tánger', napoles:'Nápoles'
+  };
+
   function datosFoto(foto){
-    return nombreCategoria(foto.dataset.categoria || '');
+    const d = foto.dataset;
+    const partes = [ETIQUETAS[d.ciudad], ETIQUETAS[d.formato], ETIQUETAS[d.trato]]
+                     .filter(Boolean);
+    return partes.join(' · ');
   }
 
   function mostrar(i){
@@ -1233,6 +1372,9 @@ a{color:inherit;text-decoration:none}
     }
     xInicio = yInicio = null;
   }, { passive:true });
+
+  recalcularVisibles();
+  anunciar();
 })();
 </script>
 
