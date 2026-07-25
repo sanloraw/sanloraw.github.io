@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanlo — Fotografía de calle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Karla:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   TOKENS
+   ============================================ */
+:root{
+  --washi:#F4EFE6;
+  --tatami:#EDE5D8;
+  --luz:#FBF8F3;
+
+  --sumi:#3A3632;
+  --ceniza:#6B6259;
+  --niebla:#9A8F82;
+
+  --roble:#A67C52;
+  --pino:#8C6239;
+  --lino:#D9CFC0;
+  --ambar:#C4A882;
+
+  --serif:'Cormorant Garamond', Georgia, serif;
+  --sans:'Karla', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --ma-xs:1.5rem;
+  --ma-s:3rem;
+  --ma-m:6rem;
+  --ma-l:12rem;
+
+  --lenta:1.2s cubic-bezier(.16,.84,.44,1);
+  --media:.8s cubic-bezier(.16,.84,.44,1);
+  --hover:.6s cubic-bezier(.33,1,.68,1);
+
+  --barra:210px;
+  --junta:10px;
+  --bastidor:1px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+html{
+  scroll-behavior:smooth;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  -webkit-text-size-adjust:100%;   /* evita reajuste de texto en iOS al girar */
+}
+
+/* Sin resaltado azul al tocar; los estados propios ya dan feedback */
+a,button{-webkit-tap-highlight-color:transparent}
+
+body{
+  background-color:var(--washi);
+  color:var(--sumi);
+  font-family:var(--sans);
+  font-weight:300;
+  font-size:clamp(.9rem,.85rem + .2vw,1rem);
+  line-height:1.75;
+  overflow-x:hidden;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(196,168,130,.05) 0%, transparent 45%),
+    radial-gradient(circle at 80% 70%, rgba(166,124,82,.04) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+  background-attachment:fixed;
+}
+
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+/* El atributo hidden debe ganar a cualquier display explícito
+   (los conceptos, haikus y archivo usan display:flex) */
+[hidden]{display:none !important}
+::selection{background:var(--ambar);color:var(--sumi)}
+:focus-visible{outline:1px solid var(--roble);outline-offset:5px}
+
+.sr-solo{
+  position:absolute;
+  width:1px;height:1px;
+  padding:0;margin:-1px;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  white-space:nowrap;border:0;
+}
+
+/* ============================================
+   APERTURA
+   ============================================ */
+.apertura{
+  min-height:100svh;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  text-align:center;position:relative;
+  padding:var(--ma-m) clamp(1.5rem,5vw,5rem);
+}
+.marca{
+  font-family:var(--serif);font-weight:300;
+  font-size:clamp(4rem,16vw,11rem);
+  line-height:.9;letter-spacing:-.03em;
+  color:var(--sumi);opacity:0;
+  animation:revelar 2s cubic-bezier(.16,.84,.44,1) .4s forwards;
+}
+.marca em{
+  font-style:italic;color:var(--roble);
+  font-size:.34em;letter-spacing:0;vertical-align:super;
+}
+.apertura__linea{
+  width:1px;height:0;background:var(--lino);
+  margin-block:var(--ma-s);
+  animation:crecer 1.6s cubic-bezier(.16,.84,.44,1) 1.2s forwards;
+}
+@keyframes crecer{to{height:70px}}
+.apertura__meta{
+  font-size:.74rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--niebla);opacity:0;
+  animation:revelar 1.6s cubic-bezier(.16,.84,.44,1) 1.6s forwards;
+}
+.indicador{
+  position:absolute;bottom:var(--ma-s);left:50%;
+  transform:translateX(-50%);
+  width:1px;height:56px;
+  background:linear-gradient(to bottom, transparent, var(--lino));
+  opacity:0;animation:revelar 2s ease 2.2s forwards;
+}
+.indicador::after{
+  content:'';position:absolute;top:0;left:0;
+  width:1px;height:18px;background:var(--roble);
+  animation:descender 3.4s cubic-bezier(.5,0,.5,1) infinite;
+}
+@keyframes revelar{to{opacity:1}}
+@keyframes descender{
+  0%{transform:translateY(0);opacity:0}
+  25%{opacity:1}75%{opacity:1}
+  100%{transform:translateY(38px);opacity:0}
+}
+
+/* ============================================
+   ESTRUCTURA
+   ============================================ */
+.taller{
+  display:grid;
+  grid-template-columns:var(--barra) 1fr;
+  align-items:start;
+}
+
+/* --- BARRA LATERAL --- */
+.barra{
+  position:sticky;top:0;height:100svh;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:var(--ma-s) 0 var(--ma-s) clamp(1.5rem,3vw,2.5rem);
+  border-right:1px solid var(--lino);
+}
+.barra__marca{
+  font-family:var(--serif);
+  font-size:1.35rem;font-weight:400;
+  line-height:1.15;letter-spacing:.12em;
+  color:var(--sumi);position:relative;
+  /* reset de botón */
+  background:none;border:none;padding:0;margin:0;
+  text-align:left;cursor:pointer;
+  transition:color var(--hover);
+  display:block;
+}
+.barra__marca span{display:block}
+.barra__marca::after{
+  content:'';position:absolute;top:-6px;right:-10px;
+  width:5px;height:5px;background:var(--sumi);
+  transition:background var(--hover), transform var(--media);
+}
+/* El punto se tiñe de Roble al pasar el ratón: señal de que es pulsable */
+.barra__marca:hover::after{background:var(--roble);transform:scale(1.3)}
+/* --- FILTROS --- */
+.filtros{
+  display:flex;flex-direction:column;gap:.2rem;
+  overflow-y:auto;
+  flex:1 1 auto;
+  min-height:0;
+  padding-right:.6rem;
+  margin-block:var(--ma-xs);
+  scrollbar-width:thin;
+  scrollbar-color:var(--lino) transparent;
+}
+.filtros::-webkit-scrollbar{width:3px}
+.filtros::-webkit-scrollbar-thumb{background:var(--lino)}
+
+.grupo{border-bottom:1px solid var(--lino)}
+.grupo:first-child{border-top:1px solid var(--lino)}
+
+/* Cabecera de categoría: mismo trato que la navegación anterior —
+   cuadrado en Sumi a la izquierda y subrayado en Roble al pasar */
+.grupo__boton{
+  width:100%;
+  display:flex;align-items:center;
+  gap:.8rem;
+  padding:.9rem 0 .9rem 1.1rem;
+  background:none;border:none;cursor:pointer;
+  font-family:var(--sans);
+  font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ceniza);
+  text-align:left;
+  position:relative;
+  transition:color var(--hover);
+}
+.grupo__boton::before{
+  content:'';position:absolute;left:0;top:50%;
+  width:5px;height:5px;background:var(--sumi);
+  transform:translateY(-50%) scale(0);
+  transition:transform var(--media);
+}
+.grupo__boton::after{
+  content:'';position:absolute;left:1.1rem;bottom:.5rem;
+  width:calc(100% - 1.1rem);height:1px;background:var(--roble);
+  transform:scaleX(0);transform-origin:right;
+  transition:transform var(--media);
+}
+.grupo__boton:hover{color:var(--sumi)}
+.grupo__boton:hover::after{transform:scaleX(1);transform-origin:left}
+.grupo__boton[aria-expanded="true"]{color:var(--sumi)}
+.grupo__boton[aria-expanded="true"]::before{transform:translateY(-50%) scale(1)}
+
+/* Signo: una línea que se cruza al abrir */
+.grupo__signo{
+  position:relative;
+  width:9px;height:9px;
+  flex:0 0 auto;
+  margin-left:auto;
+}
+.grupo__signo::before,.grupo__signo::after{
+  content:'';position:absolute;
+  background:var(--niebla);
+  top:50%;left:0;
+  width:100%;height:1px;
+  transition:transform var(--media), background var(--hover);
+}
+.grupo__signo::after{transform:rotate(90deg)}
+.grupo__boton:hover .grupo__signo::before,
+.grupo__boton:hover .grupo__signo::after{background:var(--sumi)}
+.grupo__boton[aria-expanded="true"] .grupo__signo::after{transform:rotate(0deg)}
+.grupo__boton[aria-expanded="true"] .grupo__signo::before{background:var(--sumi)}
+
+/* Panel desplegable */
+.grupo__panel{
+  display:grid;
+  grid-template-rows:0fr;
+  transition:grid-template-rows var(--media);
+}
+.grupo__boton[aria-expanded="true"] + .grupo__panel{grid-template-rows:1fr}
+.grupo__lista{
+  overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.grupo__interior{
+  display:flex;flex-direction:column;gap:.1rem;
+  padding-bottom:.9rem;
+  padding-left:1.1rem;
+}
+
+/* Opción: mismo lenguaje, cuadrado más pequeño */
+.opcion{
+  display:flex;align-items:center;
+  gap:.8rem;
+  padding:.4rem 0 .4rem 1.1rem;
+  background:none;border:none;cursor:pointer;
+  font-family:var(--sans);
+  font-size:.68rem;letter-spacing:.1em;
+  color:var(--niebla);
+  text-align:left;
+  position:relative;
+  transition:color var(--hover);
+}
+.opcion::before{
+  content:'';position:absolute;left:0;top:50%;
+  width:4px;height:4px;background:var(--sumi);
+  transform:translateY(-50%) scale(0);
+  transition:transform var(--media);
+}
+.opcion::after{
+  content:'';position:absolute;left:1.1rem;bottom:.15rem;
+  width:calc(100% - 1.1rem);height:1px;background:var(--roble);
+  transform:scaleX(0);transform-origin:right;
+  transition:transform var(--media);
+}
+.opcion:hover{color:var(--ceniza)}
+.opcion:hover::after{transform:scaleX(1);transform-origin:left}
+.opcion[aria-pressed="true"]{color:var(--sumi)}
+.opcion[aria-pressed="true"]::before{transform:translateY(-50%) scale(1)}
+
+.opcion__cuenta{
+  margin-left:auto;
+  font-size:.58rem;
+  color:var(--lino);
+  font-variant-numeric:tabular-nums;
+  transition:color var(--hover);
+}
+.opcion[aria-pressed="true"] .opcion__cuenta{color:var(--niebla)}
+
+/* Botón de limpiar */
+.filtros__limpiar{
+  align-self:flex-start;
+  margin-top:.9rem;
+  padding:.3rem 0;
+  background:none;border:none;cursor:pointer;
+  font-family:var(--sans);
+  font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--roble);
+  position:relative;
+  opacity:0;pointer-events:none;
+  transition:opacity var(--media), color var(--hover);
+}
+.filtros__limpiar.activo{opacity:1;pointer-events:auto}
+.filtros__limpiar::after{
+  content:'';position:absolute;left:0;bottom:0;
+  width:100%;height:1px;background:var(--roble);
+  transform:scaleX(0);transform-origin:right;
+  transition:transform var(--media);
+}
+.filtros__limpiar:hover::after{transform:scaleX(1);transform-origin:left}
+
+/* Enlace de contacto, al pie de los filtros */
+.barra__contacto{
+  font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ceniza);position:relative;width:fit-content;
+  transition:color var(--hover);
+}
+.barra__contacto::after{
+  content:'';position:absolute;left:0;bottom:-4px;
+  width:100%;height:1px;background:var(--roble);
+  transform:scaleX(0);transform-origin:right;
+  transition:transform var(--media);
+}
+.barra__contacto:hover{color:var(--sumi)}
+.barra__contacto:hover::after{transform:scaleX(1);transform-origin:left}
+
+.barra__pie{display:flex;flex-direction:column;gap:1.2rem}
+.barra__social{display:flex;gap:.9rem}
+.barra__social a{
+  font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--niebla);transition:color var(--hover);
+}
+.barra__social a:hover{color:var(--sumi)}
+.barra__copy{font-size:.6rem;letter-spacing:.1em;color:var(--niebla)}
+
+/* --- CUERPO --- */
+.cuerpo{
+  padding:var(--ma-s) clamp(1.5rem,4vw,3.5rem) var(--ma-m);
+  min-width:0;
+}
+
+.cabecera{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:var(--ma-s);flex-wrap:wrap;margin-bottom:var(--ma-xs);
+}
+.cabecera__titulo{
+  font-family:var(--serif);font-style:italic;
+  font-size:1.05rem;font-weight:400;
+  letter-spacing:.14em;text-transform:uppercase;
+  color:var(--sumi);position:relative;padding-bottom:.7rem;
+}
+.cabecera__titulo::after{
+  content:'';position:absolute;left:0;bottom:0;
+  width:22px;height:2px;background:var(--sumi);
+}
+.cabecera__titulo::before{
+  content:'';position:absolute;left:28px;bottom:1px;
+  width:60px;height:1px;background:var(--lino);
+}
+.cabecera__meta{
+  display:flex;align-items:center;gap:1.2rem;
+  font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--niebla);
+}
+.cabecera__raya{display:block;width:44px;height:1px;background:var(--lino)}
+/* La pista se lee como indicación, no como dato: cursiva serif, sin caja */
+.cabecera__pista{
+  font-family:var(--serif);
+  font-style:italic;
+  font-size:.92rem;
+  letter-spacing:.02em;
+  text-transform:none;
+  color:var(--ceniza);
+}
+
+/* En modo filtrado la cabecera se retira: solo fotos.
+   Colapsa su alto con una transición para que la salida sea suave. */
+.cuerpo.filtrando .cabecera{
+  opacity:0;
+  max-height:0;
+  margin:0;
+  overflow:hidden;
+  pointer-events:none;
+  transition:opacity var(--media), max-height var(--media), margin var(--media);
+}
+.cabecera{
+  max-height:8rem;
+  transition:opacity var(--media), max-height var(--media), margin var(--media);
+}
+
+/* ============================================
+   MOSAICO EN COLUMNAS
+   Cada columna apila piezas de altura libre. Las fotos se
+   muestran enteras — su altura la marca su propia proporción,
+   no la retícula. Las columnas mantienen el ancho regular,
+   así el conjunto sigue leyéndose como un panel shoji.
+   ============================================ */
+.mosaico{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:var(--junta);
+  align-items:stretch;      /* las columnas igualan altura */
+  padding:var(--junta);
+  border:var(--bastidor) solid var(--lino);
+  position:relative;
+}
+.mosaico::before,.mosaico::after{
+  content:'';position:absolute;
+  width:14px;height:14px;
+  border-color:var(--sumi);border-style:solid;
+}
+.mosaico::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
+.mosaico::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+
+.columna{
+  display:flex;
+  flex-direction:column;
+  gap:var(--junta);
+  min-width:0;
+}
+/* La última pieza absorbe el sobrante, de modo que ninguna
+   columna termine antes que las demás */
+.columna > *:last-child{flex:1 1 auto}
+
+/* --- MODO FILTRADO ---
+   Al elegir una opción, la vista se limpia por completo: fuera cabecera,
+   conceptos, haikus y archivo (exclusivos de la portada). Las fotos que
+   cumplen el filtro se muestran de dos en dos, grandes y a tamaño completo.
+   Cada una abre el visor a pantalla completa al pulsarla. */
+.mosaico.filtrando{
+  grid-template-columns:repeat(2,1fr);
+  gap:clamp(1rem,2.5vw,2rem);
+  border:none;
+  padding:0;
+  align-items:start;
+}
+.mosaico.filtrando::before,
+.mosaico.filtrando::after{display:none}
+.mosaico.filtrando .columna{
+  display:contents;   /* las fotos suben al grid del mosaico */
+}
+.mosaico.filtrando .tesela{align-self:start}
+.mosaico.filtrando .tesela--foto{cursor:zoom-in}
+.mosaico.filtrando .tesela--foto img{height:auto}
+/* Rótulo siempre visible en la vista filtrada */
+.mosaico.filtrando .tesela__rotulo{opacity:1;transform:none}
+
+.tesela{position:relative;overflow:hidden}
+
+/* --- FOTOGRAFÍAS: enteras, sin recorte --- */
+.tesela--foto{background:var(--tatami);cursor:zoom-in}
+.tesela--foto img{
+  width:100%;
+  height:auto;          /* la altura la manda la foto */
+  display:block;
+  transition:transform 2.6s cubic-bezier(.16,.84,.44,1), filter var(--lenta);
+}
+.tesela--foto:hover img{transform:scale(1.03)}
+
+.mono{filter:grayscale(1) sepia(.12) contrast(1.05) brightness(1.01)}
+.tesela--foto:hover img.mono{filter:grayscale(.85) sepia(.1) contrast(1.06)}
+
+.tesela--foto::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(140deg, rgba(251,248,243,.22) 0%, transparent 55%);
+  opacity:0;pointer-events:none;transition:opacity var(--lenta);
+}
+.tesela--foto:hover::after{opacity:1}
+
+.tesela__rotulo{
+  position:absolute;left:1rem;bottom:.9rem;z-index:2;
+  font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--luz);opacity:0;transform:translateY(8px);
+  transition:opacity var(--media), transform var(--media);
+  text-shadow:0 1px 12px rgba(58,54,50,.55);
+}
+.tesela--foto:hover .tesela__rotulo{opacity:1;transform:none}
+
+/* --- CONCEPTOS: formato compacto, como la primera versión de Ma
+   Kanji grande y glosa debajo. Sin verso, sin marca de agua. --- */
+.concepto{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  justify-content:center;
+  text-align:right;
+  gap:.45rem;
+  padding:var(--ma-xs);
+  min-height:150px;
+}
+.concepto__kanji{
+  font-family:var(--serif);
+  font-style:italic;
+  font-size:1.7rem;
+  line-height:1;
+}
+.concepto__glosa{
+  font-size:.58rem;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+}
+
+.concepto--pino{background:var(--pino)}
+.concepto--pino .concepto__kanji{color:var(--washi)}
+.concepto--pino .concepto__glosa{color:var(--ambar)}
+
+.concepto--sumi{background:var(--sumi);position:relative;overflow:hidden}
+.concepto--sumi .concepto__kanji{color:var(--washi);position:relative;z-index:1}
+.concepto--sumi .concepto__glosa{color:var(--ambar);position:relative;z-index:1}
+/* Retícula shoji muy tenue calada sobre el oscuro */
+.concepto--sumi::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(to right, rgba(244,239,230,.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(244,239,230,.07) 1px, transparent 1px);
+  background-size:33.333% 25%;
+  pointer-events:none;
+}
+
+.concepto--papel{
+  background:var(--luz);
+  border:var(--bastidor) solid var(--lino);
+  position:relative;
+}
+.concepto--papel .concepto__kanji{color:var(--sumi)}
+.concepto--papel .concepto__glosa{color:var(--niebla)}
+.concepto--papel::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 75% 20%, rgba(196,168,130,.2) 0%, transparent 60%);
+  pointer-events:none;
+}
+
+/* Alineación a la izquierda para alternar el ritmo */
+.concepto--izq{align-items:flex-start;text-align:left}
+
+/* --- HAIKUS: tesela propia, sobre washi --- */
+.haiku{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:.9rem;
+  padding:var(--ma-xs) 1rem;
+  min-height:170px;
+}
+.haiku p{
+  font-family:var(--serif);
+  font-style:italic;
+  font-size:clamp(.95rem,.85rem + .4vw,1.2rem);
+  line-height:1.55;
+  color:var(--sumi);
+}
+.haiku p span{display:block}
+.haiku--der{text-align:right;align-items:flex-end}
+
+/* ============================================
+   VISOR — pantalla completa, una foto, con flechas
+   ============================================ */
+.visor{
+  position:fixed;inset:0;z-index:200;
+  display:flex;flex-direction:column;
+  background:rgba(244,239,230,.94);
+  backdrop-filter:blur(30px) saturate(1.05);
+  -webkit-backdrop-filter:blur(30px) saturate(1.05);
+  opacity:0;visibility:hidden;
+  transition:opacity var(--media), visibility var(--media);
+}
+.visor.abierto{opacity:1;visibility:visible}
+
+/* Barra superior: contador y cierre */
+.visor__barra{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:clamp(1.2rem,3vw,2rem) clamp(1.5rem,4vw,3rem);
+  flex:0 0 auto;
+}
+.visor__cuenta{
+  font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ceniza);font-variant-numeric:tabular-nums;
+}
+.visor__cerrar{
+  width:30px;height:30px;
+  background:none;border:none;cursor:pointer;
+  position:relative;flex:0 0 auto;
+}
+.visor__cerrar::before,.visor__cerrar::after{
+  content:'';position:absolute;top:50%;left:0;
+  width:100%;height:1px;background:var(--sumi);
+  transition:background var(--hover);
+}
+.visor__cerrar::before{transform:rotate(45deg)}
+.visor__cerrar::after{transform:rotate(-45deg)}
+.visor__cerrar:hover::before,.visor__cerrar:hover::after{background:var(--roble)}
+
+/* Escenario central */
+.visor__escena{
+  flex:1 1 auto;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 clamp(4rem,10vw,7rem) clamp(1.5rem,4vw,3rem);
+  min-height:0;
+  position:relative;   /* ancla de las flechas */
+}
+
+.visor__figura{
+  display:flex;flex-direction:column;align-items:center;
+  gap:1.2rem;
+  max-width:100%;max-height:100%;
+  min-width:0;
+}
+.visor__figura img{
+  max-width:100%;
+  max-height:76vh;
+  width:auto;height:auto;
+  object-fit:contain;
+  opacity:0;
+  transition:opacity var(--media);
+}
+.visor__figura img.cargada{opacity:1}
+.visor__pie{
+  font-size:.72rem;letter-spacing:.16em;
+  color:var(--ceniza);text-align:center;
+  display:flex;gap:1rem;align-items:baseline;
+}
+.visor__pie .lugar{color:var(--sumi)}
+.visor__pie .dato{color:var(--niebla);font-size:.64rem;letter-spacing:.12em}
+
+/* Flechas: ancladas a los bordes de la escena, en la misma posición
+   siempre, independientes del tamaño de cada foto */
+.visor__flecha{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:2;
+  width:clamp(40px,5vw,54px);
+  height:clamp(40px,5vw,54px);
+  background:none;
+  border:1px solid var(--lino);
+  border-radius:50%;
+  cursor:pointer;
+  transition:border-color var(--hover), background var(--hover);
+}
+.visor__flecha--prev{left:clamp(1rem,3vw,2.5rem)}
+.visor__flecha--next{right:clamp(1rem,3vw,2.5rem)}
+.visor__flecha:hover{border-color:var(--roble);background:rgba(166,124,82,.06)}
+.visor__flecha::before{
+  content:'';position:absolute;top:50%;left:50%;
+  width:9px;height:9px;
+  border-top:1px solid var(--sumi);
+  border-right:1px solid var(--sumi);
+  transition:border-color var(--hover);
+}
+.visor__flecha--prev::before{transform:translate(-30%,-50%) rotate(-135deg)}
+.visor__flecha--next::before{transform:translate(-70%,-50%) rotate(45deg)}
+.visor__flecha:hover::before{border-color:var(--roble)}
+.visor__flecha:disabled{opacity:.25;cursor:default}
+.visor__flecha:disabled:hover{border-color:var(--lino);background:none}
+.visor__flecha:disabled:hover::before{border-color:var(--sumi)}
+
+@media (max-width:640px){
+  .visor__escena{
+    padding-inline:0;
+  }
+  .visor__flecha{
+    width:46px;height:46px;
+    background:rgba(244,239,230,.72);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  .visor__flecha--prev{left:.6rem}
+  .visor__flecha--next{right:.6rem}
+  .visor__figura img{max-height:70vh}
+  /* Cerrar más grande y fácil de acertar */
+  .visor__cerrar{width:40px;height:40px}
+  .visor__barra{padding:1.2rem 1.4rem}
+  /* La imagen no debe capturar el gesto de deslizar */
+  .visor__figura img{touch-action:pan-y}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .visor__figura img{transition:none;opacity:1}
+}
+
+/* ============================================
+   CIERRE
+   ============================================ */
+.cierre{
+  margin-top:var(--ma-l);
+  padding-top:var(--ma-m);
+  border-top:1px solid var(--lino);
+  text-align:center;
+}
+.cierre__intro{
+  font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--niebla);margin-bottom:var(--ma-xs);
+}
+.cierre__correo{
+  font-family:var(--serif);font-weight:300;
+  font-size:clamp(1.5rem,1rem + 2.8vw,3.4rem);line-height:1.2;
+  display:inline-block;position:relative;
+  color:var(--sumi);transition:color var(--hover);
+}
+.cierre__correo::after{
+  content:'';position:absolute;left:0;bottom:-.1em;
+  width:100%;height:1px;background:var(--roble);
+  transform:scaleX(0);transform-origin:right;
+  transition:transform var(--media);
+}
+.cierre__correo:hover{color:var(--pino)}
+.cierre__correo:hover::after{transform:scaleX(1);transform-origin:left}
+
+/* ============================================
+   REVELADO
+   ============================================ */
+.al-entrar{
+  opacity:0;transform:translateY(20px);
+  transition:opacity 1.3s cubic-bezier(.16,.84,.44,1), transform 1.3s cubic-bezier(.16,.84,.44,1);
+}
+.al-entrar.visible{opacity:1;transform:none}
+
+/* ============================================
+   TABLETA — dos columnas
+   ============================================ */
+@media (max-width:1080px){
+  :root{--barra:170px}
+  .mosaico{grid-template-columns:repeat(2,1fr)}
+  /* La tercera columna se reparte: sus piezas pasan a las otras dos */
+  .columna--c{display:contents}
+  .columna--c > *{grid-column:1 / -1}
+}
+
+/* ============================================
+   MÓVIL — una columna
+   ============================================ */
+@media (max-width:760px){
+  :root{--junta:8px}
+  .taller{grid-template-columns:1fr}
+
+  .barra{
+    position:static;height:auto;
+    flex-direction:column;align-items:stretch;
+    gap:1rem;
+    padding:var(--ma-xs) clamp(1.5rem,5vw,2rem);
+    border-right:none;border-bottom:1px solid var(--lino);
+  }
+  .barra__cabecera{
+    display:flex;align-items:center;justify-content:space-between;gap:1.2rem;
+  }
+  .barra__marca{display:flex;gap:.3em;font-size:1.1rem}
+  .barra__marca::after{top:-4px;right:-8px;width:4px;height:4px}
+  .filtros{
+    overflow:visible;max-height:none;
+    margin-block:0;padding-right:0;
+  }
+  .barra__pie{display:none}
+  .barra__contacto{align-self:flex-start}
+
+  .cuerpo{padding:var(--ma-s) clamp(1.5rem,5vw,2rem) var(--ma-m)}
+  .cabecera__meta{font-size:.62rem;gap:.8rem}
+  .cabecera__pista{display:none}
+
+  .mosaico{grid-template-columns:1fr}
+  .columna--c{display:flex}
+  .columna--c > *{grid-column:auto}
+  /* En móvil, filtrado a una sola foto por fila */
+  .mosaico.filtrando{grid-template-columns:1fr}
+
+  .concepto{min-height:120px}
+  .haiku{min-height:auto;padding-block:var(--ma-s)}
+  .tesela__rotulo{opacity:1;transform:none}
+
+  /* Zonas de toque más amplias en móvil (mín. cómodo ~44px) */
+  .grupo__boton{padding-block:1.1rem}
+  .opcion{padding-block:.7rem}
+  .barra__contacto{padding-block:.6rem}
+  .filtros__limpiar{padding-block:.7rem}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+    scroll-behavior:auto !important;
+  }
+  .al-entrar{opacity:1;transform:none}
+  .marca,.apertura__meta,.indicador{opacity:1}
+  .apertura__linea{height:70px}
+}
+</style>
+</head>
+<body>
+
+<!-- APERTURA -->
+<header class="apertura">
+  <h1 class="marca">Sanlo<em>.raw</em></h1>
+  <div class="apertura__linea" aria-hidden="true"></div>
+  <p class="apertura__meta">Fotografía de calle · Madrid</p>
+  <div class="indicador" aria-hidden="true"></div>
+</header>
+
+<div class="taller">
+
+  <!-- BARRA LATERAL -->
+  <aside class="barra">
+    <div class="barra__cabecera">
+      <button class="barra__marca" type="button" id="volver-inicio" aria-label="Sanlo — volver a la portada">
+        <span aria-hidden="true">S</span><span aria-hidden="true">A</span><span aria-hidden="true">N</span><span aria-hidden="true">L</span><span aria-hidden="true">O</span>
+      </button>
+    </div>
+
+    <div class="filtros">
+
+      <!-- FORMATO — excluyente -->
+      <div class="grupo">
+        <button class="grupo__boton" aria-expanded="false" aria-controls="p-formato">
+          Formato
+          <span class="grupo__signo" aria-hidden="true"></span>
+        </button>
+        <div class="grupo__panel" id="p-formato">
+          <div class="grupo__lista">
+            <div class="grupo__interior" role="group" aria-label="Formato">
+              <button class="opcion" data-eje="formato" data-valor="digital" aria-pressed="false">
+                Digital
+                <span class="opcion__cuenta">0</span>
+              </button>
+              <button class="opcion" data-eje="formato" data-valor="analogico" aria-pressed="false">
+                Analógico
+                <span class="opcion__cuenta">0</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CIUDAD — acumulable. Los botones se generan solos a partir
+           de las ciudades presentes en fotos/manifest.json -->
+      <div class="grupo">
+        <button class="grupo__boton" aria-expanded="false" aria-controls="p-ciudad">
+          Ciudad
+          <span class="grupo__signo" aria-hidden="true"></span>
+        </button>
+        <div class="grupo__panel" id="p-ciudad">
+          <div class="grupo__lista">
+            <div class="grupo__interior" role="group" aria-label="Ciudad" id="lista-ciudades"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRATAMIENTO — excluyente -->
+      <div class="grupo">
+        <button class="grupo__boton" aria-expanded="false" aria-controls="p-trato">
+          Tratamiento
+          <span class="grupo__signo" aria-hidden="true"></span>
+        </button>
+        <div class="grupo__panel" id="p-trato">
+          <div class="grupo__lista">
+            <div class="grupo__interior" role="group" aria-label="Tratamiento">
+              <button class="opcion" data-eje="trato" data-valor="bn" aria-pressed="false">
+                Blanco y negro
+                <span class="opcion__cuenta">0</span>
+              </button>
+              <button class="opcion" data-eje="trato" data-valor="color" aria-pressed="false">
+                Color
+                <span class="opcion__cuenta">0</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="filtros__limpiar" type="button">Quitar filtros</button>
+    </div>
+
+    <a href="#contacto" class="barra__contacto">Contacto</a>
+
+    <div class="barra__pie">
+      <div class="barra__social">
+        <a href="#">IG</a>
+        <a href="#">BE</a>
+      </div>
+      <span class="barra__copy">© 2026 Sanlo</span>
+    </div>
+  </aside>
+
+  <!-- CUERPO -->
+  <main class="cuerpo">
+
+    <div class="cabecera">
+      <h2 class="cabecera__titulo">Calle, sin guion</h2>
+      <div class="cabecera__meta">
+        <span class="cabecera__pista">Filtra por formato, ciudad o tratamiento</span>
+        <span class="cabecera__raya" aria-hidden="true"></span>
+        <span data-cuenta>Cargando…</span>
+      </div>
+    </div>
+
+    <p id="aviso-filtros" class="sr-solo" aria-live="polite" role="status"></p>
+
+    <!-- MOSAICO -->
+    <section class="mosaico" id="mosaico" aria-label="Fotografías">
+      <div class="columna columna--a"></div>
+      <div class="columna columna--b"></div>
+      <div class="columna columna--c"></div>
+    </section>
+
+    <!-- CIERRE -->
+    <footer class="cierre" id="contacto">
+      <p class="cierre__intro al-entrar">Para encargos, copias o simplemente hablar</p>
+      <a href="mailto:hola@sanlo.raw" class="cierre__correo al-entrar">hola@sanlo.raw</a>
+    </footer>
+
+  </main>
+</div>
+
+<!-- VISOR -->
+<div class="visor" id="visor" role="dialog" aria-modal="true" aria-label="Visor de fotografías" hidden>
+  <div class="visor__barra">
+    <span class="visor__cuenta" id="visor-cuenta"></span>
+    <button class="visor__cerrar" type="button" aria-label="Cerrar visor"></button>
+  </div>
+  <div class="visor__escena">
+    <button class="visor__flecha visor__flecha--prev" type="button" aria-label="Anterior"></button>
+    <figure class="visor__figura">
+      <img id="visor-img" src="" alt="">
+      <figcaption class="visor__pie">
+        <span class="lugar" id="visor-lugar"></span>
+        <span class="dato" id="visor-dato"></span>
+      </figcaption>
+    </figure>
+    <button class="visor__flecha visor__flecha--next" type="button" aria-label="Siguiente"></button>
+  </div>
+</div>
+
+<script>
+(async function(){
+  'use strict';
+
+  /* ══════════════════════════════════════════════════════════════════
+     ⬇  TUS FOTOS  ⬇
+     Ya no se escriben aquí. Para añadir o cambiar fotos:
+
+       1. Copia el archivo dentro de fotos/, en la ruta:
+            fotos/<ciudad>/<formato>/<color>/archivo.jpg
+          donde formato es "digital" o "analogico", y color es "bn" o "color".
+          Ejemplo: fotos/madrid/analogico/bn/lavapies.jpg
+
+       2. Añade una línea en fotos/manifest.json con la ruta (sin "fotos/")
+          y el texto que quieres que aparezca sobre la foto:
+            { "ruta":"madrid/analogico/bn/lavapies.jpg", "lugar":"Lavapiés" }
+
+     La ciudad, el formato y el tratamiento se deducen solos de la carpeta;
+     el filtro de Ciudad de la barra lateral también se genera solo.
+     Ver fotos/LEEME.md para más detalle.
+     ══════════════════════════════════════════════════════════════════ */
+
+  const MANIFIESTO = "fotos/manifest.json";
+
+  /* Nombres bonitos para ciudades conocidas; cualquier otra carpeta de
+     ciudad que no esté aquí se muestra igualmente, con su nombre capitalizado */
+  const NOMBRES_CIUDAD = {
+    madrid:"Madrid", lisboa:"Lisboa", oporto:"Oporto",
+    tanger:"Tánger", napoles:"Nápoles"
+  };
+
+  function nombreCiudad(clave){
+    if(NOMBRES_CIUDAD[clave]) return NOMBRES_CIUDAD[clave];
+    return clave.charAt(0).toUpperCase() + clave.slice(1).replace(/-/g, ' ');
+  }
+
+  /* Convierte una entrada del manifiesto en el objeto de foto que
+     usa el resto del script, deduciendo ciudad/formato/color de la ruta */
+  function entradaAFoto(entrada){
+    const partes = entrada.ruta.split('/');
+    const [ciudad, formato, color] = partes;
+    return {
+      archivo: entrada.ruta,
+      lugar: entrada.lugar || '',
+      ciudad, formato, color
+    };
+  }
+
+  /* ── Textos japoneses intercalados en la galería (portada) ──
+     Puedes cambiar el kanji, el nombre o los versos. Tipos:
+       "concepto" → kanji + nombre (fondo pino, sumi o papel)
+       "haiku"    → tres versos                                    */
+  const MIS_TEXTOS = [
+    { tipo:"concepto", kanji:"間", nombre:"Ma · el intervalo",        fondo:"pino"  },
+    { tipo:"haiku",    versos:["Alguien dobla","la esquina —","ya no vuelve."] },
+    { tipo:"concepto", kanji:"静", nombre:"Seijaku · la quietud",     fondo:"papel" },
+    { tipo:"concepto", kanji:"寂", nombre:"Wabi-sabi · lo imperfecto", fondo:"papel", izq:true },
+    { tipo:"concepto", kanji:"幽", nombre:"Yūgen · lo que no se ve",   fondo:"sumi"  },
+    { tipo:"haiku",    versos:["Grano, mancha,","un dedo en el borde —","así la quiero."] },
+    { tipo:"concepto", kanji:"影", nombre:"Kage · la sombra",         fondo:"sumi", izq:true },
+    { tipo:"haiku",    versos:["Se apaga el semáforo.","Nadie sabe que esto","fue lo último."], der:true },
+    { tipo:"concepto", kanji:"侘", nombre:"Wabi · lo sencillo",       fondo:"pino", izq:true },
+  ];
+
+  /* Carpeta donde están tus imágenes (relativa al HTML) */
+  const CARPETA = "fotos/";
+
+  /* ══════════════════════════════════════════════════════════════════
+     A partir de aquí NO necesitas tocar nada: el mosaico se construye
+     solo con las listas de arriba.
+     ══════════════════════════════════════════════════════════════════ */
+
+  /* Crea el elemento de una foto */
+  function crearFoto(f, prioritaria){
+    const fig = document.createElement('figure');
+    fig.className = 'tesela tesela--foto al-entrar';
+    fig.dataset.formato = f.formato;
+    fig.dataset.ciudad  = f.ciudad;
+    fig.dataset.trato   = f.color;
+
+    const img = document.createElement('img');
+    img.src = CARPETA + f.archivo;
+    img.alt = f.lugar || '';
+    if(f.color === 'bn') img.classList.add('mono');
+    img.loading = prioritaria ? 'eager' : 'lazy';
+    /* Si defines ancho/alto reales, evitas saltos al cargar (opcional) */
+    if(f.ancho && f.alto){ img.width = f.ancho; img.height = f.alto; }
+
+    const cap = document.createElement('figcaption');
+    cap.className = 'tesela__rotulo';
+    cap.textContent = f.lugar || '';
+
+    fig.append(img, cap);
+    return fig;
+  }
+
+  /* Crea el elemento de un concepto o haiku */
+  function crearTexto(t){
+    const div = document.createElement('div');
+    if(t.tipo === 'haiku'){
+      div.className = 'tesela haiku al-entrar' + (t.der ? ' haiku--der' : '');
+      const p = document.createElement('p');
+      (t.versos || []).forEach(v => {
+        const s = document.createElement('span');
+        s.textContent = v;
+        p.appendChild(s);
+      });
+      div.appendChild(p);
+    } else {
+      div.className = 'tesela concepto concepto--' + (t.fondo || 'pino') +
+                      (t.izq ? ' concepto--izq' : '') + ' al-entrar';
+      const k = document.createElement('span');
+      k.className = 'concepto__kanji'; k.textContent = t.kanji || '';
+      const g = document.createElement('span');
+      g.className = 'concepto__glosa'; g.textContent = t.nombre || '';
+      div.append(k, g);
+    }
+    return div;
+  }
+
+  /* Reparte fotos y textos en las tres columnas de forma pareja,
+     intercalando algún texto en cada columna para conservar el aire */
+  function construirMosaico(){
+    const colsEl = [
+      document.querySelector('.columna--a'),
+      document.querySelector('.columna--b'),
+      document.querySelector('.columna--c')
+    ];
+    colsEl.forEach(c => c.innerHTML = '');
+
+    /* fotos repartidas por turnos entre las tres columnas */
+    const porColumna = [[], [], []];
+    MIS_FOTOS.forEach((f, i) => {
+      porColumna[i % 3].push(crearFoto(f, i < 3));
+    });
+
+    /* textos repartidos por turnos, insertados dentro de cada columna
+       en una posición intermedia para que queden entre fotos */
+    MIS_TEXTOS.forEach((t, i) => {
+      const col = porColumna[i % 3];
+      const el  = crearTexto(t);
+      /* posición: tras la 2ª foto, la 4ª, etc., alternando */
+      const pos = Math.min(col.length, 2 + Math.floor(i / 3) * 3);
+      col.splice(pos, 0, el);
+    });
+
+    /* evita que una columna termine en foto (al estirarse se deformaría):
+       si acaba en foto y hay textos, mueve un texto al final */
+    porColumna.forEach(col => {
+      const ultimo = col[col.length - 1];
+      if(ultimo && ultimo.classList.contains('tesela--foto')){
+        const idxTexto = col.findIndex(x => !x.classList.contains('tesela--foto'));
+        if(idxTexto !== -1){
+          const [texto] = col.splice(idxTexto, 1);
+          col.push(texto);
+        }
+      }
+    });
+
+    porColumna.forEach((col, i) => col.forEach(el => colsEl[i].appendChild(el)));
+  }
+
+  /* ---------- Carga de fotos desde fotos/manifest.json ---------- */
+  let MIS_FOTOS = [];
+  try {
+    const entradas = await fetch(MANIFIESTO).then(r => r.json());
+    MIS_FOTOS = entradas.map(entradaAFoto);
+  } catch (err) {
+    /* Si abres el archivo con doble clic (file://) el navegador bloquea
+       fetch() de archivos locales: usa un servidor local para previsualizar
+       (ej. la extensión "Live Server" o `npx serve`). En GitHub Pages
+       funciona sin nada especial. */
+    console.warn('No se pudo cargar fotos/manifest.json:', err);
+  }
+
+  construirMosaico();
+
+  /* ---------- Filtro de Ciudad, generado a partir de las fotos cargadas ---------- */
+  const conteoCiudades = new Map();
+  MIS_FOTOS.forEach(f => conteoCiudades.set(f.ciudad, (conteoCiudades.get(f.ciudad) || 0) + 1));
+
+  const listaCiudades = document.getElementById('lista-ciudades');
+  conteoCiudades.forEach((cuenta, ciudad) => {
+    const boton = document.createElement('button');
+    boton.className = 'opcion';
+    boton.type = 'button';
+    boton.dataset.eje = 'ciudad';
+    boton.dataset.valor = ciudad;
+    boton.setAttribute('aria-pressed', 'false');
+    boton.innerHTML = `${nombreCiudad(ciudad)}<span class="opcion__cuenta">${cuenta}</span>`;
+    listaCiudades.appendChild(boton);
+  });
+
+  /* Contadores de Formato y Tratamiento (sus botones son fijos en el HTML) */
+  document.querySelectorAll('.opcion[data-eje="formato"], .opcion[data-eje="trato"]').forEach(op => {
+    const cuenta = MIS_FOTOS.filter(f => op.dataset.eje === 'formato'
+      ? f.formato === op.dataset.valor
+      : f.color === op.dataset.valor).length;
+    op.querySelector('.opcion__cuenta').textContent = cuenta;
+  });
+
+  const elementos = document.querySelectorAll('.al-entrar');
+  const sinMovimiento = !window.IntersectionObserver
+    || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if(sinMovimiento){
+    elementos.forEach(el => el.classList.add('visible'));
+  } else {
+    const observador = new IntersectionObserver((entradas) => {
+      entradas.forEach((entrada, i) => {
+        if(entrada.isIntersecting){
+          setTimeout(() => entrada.target.classList.add('visible'), i * 85);
+          observador.unobserve(entrada.target);
+        }
+      });
+    }, { threshold:0.08, rootMargin:'0px 0px -6% 0px' });
+
+    elementos.forEach(el => observador.observe(el));
+  }
+
+  /* ---------- Desplegables ---------- */
+  document.querySelectorAll('.grupo__boton').forEach(boton => {
+    boton.addEventListener('click', () => {
+      const abierto = boton.getAttribute('aria-expanded') === 'true';
+      boton.setAttribute('aria-expanded', String(!abierto));
+    });
+  });
+
+  /* ---------- Filtrado ---------- */
+  const EXCLUYENTES = ['formato','trato'];   // una opción a la vez
+  const estado = { formato:null, ciudad:new Set(), trato:null };
+
+  const fotos   = Array.from(document.querySelectorAll('[data-formato]'));
+  const opciones = Array.from(document.querySelectorAll('.opcion'));
+  const limpiar = document.querySelector('.filtros__limpiar');
+  const mosaico = document.getElementById('mosaico');
+  const columnas = Array.from(mosaico.querySelectorAll('.columna'));
+
+  /* Anota la posición original de cada tesela para poder restaurarla
+     al quitar los filtros */
+  columnas.forEach((col, ci) => {
+    Array.from(col.children).forEach((hijo, hi) => {
+      hijo.dataset.colOrigen = ci;
+      hijo.dataset.ordenOrigen = hi;
+    });
+  });
+
+  /* Orden global de una foto (columna, posición) para apilarlas de forma
+     coherente en la vista filtrada */
+  function ordenGlobal(el){
+    return (+el.dataset.colOrigen) * 100 + (+el.dataset.ordenOrigen);
+  }
+
+  /* Lista de fotos que el visor puede recorrer, en orden de mosaico.
+     En la portada son todas; con filtros, las que encajan. */
+  let visibles = [];
+
+  function recalcularVisibles(){
+    visibles = fotos
+      .filter(f => encaja(f))
+      .sort((a, b) => ordenGlobal(a) - ordenGlobal(b));
+    visibles.forEach((foto, i) => { foto.dataset.indiceVisor = i; });
+  }
+
+  function apilarEnColumna(){
+    /* en modo filtrado, además de recorrerlas, se apilan en una columna */
+    visibles.forEach(foto => columnas[0].appendChild(foto));
+  }
+
+  function restaurarColumnas(){
+    /* devuelve cada tesela a su columna y orden originales */
+    const todas = Array.from(mosaico.querySelectorAll('[data-col-origen]'));
+    todas.sort((a, b) =>
+      (a.dataset.colOrigen - b.dataset.colOrigen) ||
+      (a.dataset.ordenOrigen - b.dataset.ordenOrigen)
+    );
+    todas.forEach(el => {
+      columnas[+el.dataset.colOrigen].appendChild(el);
+    });
+  }
+
+  function hayFiltros(){
+    return estado.formato !== null || estado.trato !== null || estado.ciudad.size > 0;
+  }
+
+  function encaja(foto){
+    if(estado.formato && foto.dataset.formato !== estado.formato) return false;
+    if(estado.trato   && foto.dataset.trato   !== estado.trato)   return false;
+    if(estado.ciudad.size && !estado.ciudad.has(foto.dataset.ciudad)) return false;
+    return true;
+  }
+
+  function aplicar(){
+    const activos = hayFiltros();
+
+    restaurarColumnas();
+    recalcularVisibles();
+    if(activos) apilarEnColumna();
+
+    fotos.forEach(foto => { foto.hidden = !encaja(foto); });
+    limpiar.classList.toggle('activo', activos);
+    mosaico.classList.toggle('filtrando', activos);
+    document.querySelector('.cuerpo').classList.toggle('filtrando', activos);
+    /* Las teselas de conceptos/haikus/archivo NO aparecen al filtrar:
+       son exclusivas de la portada */
+    mosaico.querySelectorAll('.concepto, .haiku').forEach(t => {
+      t.hidden = activos;
+    });
+    anunciar();
+  }
+
+  const aviso = document.getElementById('aviso-filtros');
+  const cuentaVisible = document.querySelector('[data-cuenta]');
+  function anunciar(){
+    const n = fotos.filter(f => !f.hidden).length;
+    const texto = hayFiltros()
+      ? `${n} ${n === 1 ? 'fotografía' : 'fotografías'} tras aplicar los filtros`
+      : `${fotos.length} fotografías`;
+    aviso.textContent = texto;
+    if(cuentaVisible) cuentaVisible.textContent = `${fotos.length} fotografías`;
+  }
+
+  opciones.forEach(op => {
+    op.addEventListener('click', () => {
+      const eje = op.dataset.eje, valor = op.dataset.valor;
+      const activa = op.getAttribute('aria-pressed') === 'true';
+
+      if(EXCLUYENTES.includes(eje)){
+        opciones.filter(o => o.dataset.eje === eje)
+                .forEach(o => o.setAttribute('aria-pressed','false'));
+        estado[eje] = activa ? null : valor;
+        if(!activa) op.setAttribute('aria-pressed','true');
+      } else {
+        if(activa){ estado.ciudad.delete(valor); op.setAttribute('aria-pressed','false'); }
+        else      { estado.ciudad.add(valor);    op.setAttribute('aria-pressed','true');  }
+      }
+      aplicar();
+    });
+  });
+
+  function quitarFiltros(){
+    estado.formato = null; estado.trato = null; estado.ciudad.clear();
+    opciones.forEach(o => o.setAttribute('aria-pressed','false'));
+    aplicar();
+  }
+
+  limpiar.addEventListener('click', quitarFiltros);
+
+  /* El nombre SANLO devuelve a la portada: quita los filtros y sube arriba */
+  const volverInicio = document.getElementById('volver-inicio');
+  volverInicio.addEventListener('click', () => {
+    const habiaFiltros = hayFiltros();
+    if(habiaFiltros) quitarFiltros();
+    const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top:0, behavior: suave ? 'smooth' : 'auto' });
+  });
+
+  /* ---------- Visor a pantalla completa ---------- */
+  const visor      = document.getElementById('visor');
+  const visorImg   = document.getElementById('visor-img');
+  const visorLugar = document.getElementById('visor-lugar');
+  const visorDato  = document.getElementById('visor-dato');
+  const visorCuenta= document.getElementById('visor-cuenta');
+  const btnPrev    = visor.querySelector('.visor__flecha--prev');
+  const btnNext    = visor.querySelector('.visor__flecha--next');
+  const btnCerrar  = visor.querySelector('.visor__cerrar');
+
+  let indiceActual = 0;
+  let ultimoFoco   = null;
+
+  const ETIQUETAS = {
+    digital:'Digital', analogico:'Analógico',
+    bn:'Blanco y negro', color:'Color'
+  };
+
+  function datosFoto(foto){
+    const d = foto.dataset;
+    const partes = [nombreCiudad(d.ciudad), ETIQUETAS[d.formato], ETIQUETAS[d.trato]]
+                     .filter(Boolean);
+    return partes.join(' · ');
+  }
+
+  function mostrar(i){
+    if(i < 0 || i >= visibles.length) return;
+    indiceActual = i;
+    const foto = visibles[i];
+    const img  = foto.querySelector('img');
+
+    visorImg.classList.remove('cargada');
+    visorImg.onload = () => visorImg.classList.add('cargada');
+    visorImg.src = img.currentSrc || img.src;
+    visorImg.alt = img.alt || '';
+    /* hereda el tratamiento (blanco y negro o color) de la foto */
+    visorImg.classList.toggle('mono', img.classList.contains('mono'));
+    if(visorImg.complete) visorImg.classList.add('cargada');
+
+    const rotulo = foto.querySelector('.tesela__rotulo');
+    visorLugar.textContent = rotulo ? rotulo.textContent : '';
+    visorDato.textContent  = datosFoto(foto);
+    visorCuenta.textContent = `${i + 1} / ${visibles.length}`;
+
+    btnPrev.disabled = i === 0;
+    btnNext.disabled = i === visibles.length - 1;
+  }
+
+  function abrirVisor(i){
+    if(!visibles.length) return;
+    ultimoFoco = document.activeElement;
+    visor.hidden = false;
+    requestAnimationFrame(() => visor.classList.add('abierto'));
+    document.body.style.overflow = 'hidden';
+    mostrar(i);
+    btnNext.focus();
+  }
+
+  function cerrarVisor(){
+    visor.classList.remove('abierto');
+    document.body.style.overflow = '';
+    const fin = () => {
+      visor.hidden = true;
+      visor.removeEventListener('transitionend', fin);
+      if(ultimoFoco) ultimoFoco.focus();
+    };
+    visor.addEventListener('transitionend', fin);
+  }
+
+  /* Abrir al pulsar cualquier foto, tanto en portada como filtrando */
+  mosaico.addEventListener('click', (e) => {
+    const foto = e.target.closest('.tesela--foto');
+    if(!foto || foto.hidden) return;
+    const i = visibles.indexOf(foto);
+    if(i !== -1) abrirVisor(i);
+  });
+
+  btnPrev.addEventListener('click', () => mostrar(indiceActual - 1));
+  btnNext.addEventListener('click', () => mostrar(indiceActual + 1));
+  btnCerrar.addEventListener('click', cerrarVisor);
+
+  /* Clic en el fondo del escenario cierra */
+  visor.querySelector('.visor__escena').addEventListener('click', (e) => {
+    if(e.target.classList.contains('visor__escena')) cerrarVisor();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if(visor.hidden) return;
+    if(e.key === 'Escape')      cerrarVisor();
+    if(e.key === 'ArrowLeft')   mostrar(indiceActual - 1);
+    if(e.key === 'ArrowRight')  mostrar(indiceActual + 1);
+  });
+
+  /* Deslizar para navegar en táctil */
+  let xInicio = null, yInicio = null;
+  const escena = visor.querySelector('.visor__escena');
+  escena.addEventListener('touchstart', (e) => {
+    xInicio = e.changedTouches[0].clientX;
+    yInicio = e.changedTouches[0].clientY;
+  }, { passive:true });
+  escena.addEventListener('touchend', (e) => {
+    if(xInicio === null) return;
+    const dx = e.changedTouches[0].clientX - xInicio;
+    const dy = e.changedTouches[0].clientY - yInicio;
+    /* solo cuenta como swipe horizontal si domina sobre el vertical */
+    if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)){
+      mostrar(indiceActual + (dx < 0 ? 1 : -1));
+    }
+    xInicio = yInicio = null;
+  }, { passive:true });
+
+  recalcularVisibles();
+  anunciar();
+})();
+</script>
+
+</body>
+</html>
