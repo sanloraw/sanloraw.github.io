@@ -849,8 +849,8 @@ a{color:inherit;text-decoration:none}
         <div class="grupo__panel" id="p-ciudad">
           <div class="grupo__lista">
             <div class="grupo__interior" role="group" aria-label="Ciudad">
-              <!-- Añade aquí un botón por cada ciudad que uses en MIS_FOTOS,
-                   con data-valor igual al campo "ciudad" de esa foto -->
+              <!-- Añade aquí un botón por cada ciudad que uses en filtros.json,
+                   con data-valor igual al campo "city" en minúsculas -->
               <button class="opcion" data-eje="ciudad" data-valor="madrid" aria-pressed="false">
                 Madrid
                 <span class="opcion__cuenta">7</span>
@@ -876,6 +876,46 @@ a{color:inherit;text-decoration:none}
               <button class="opcion" data-eje="trato" data-valor="color" aria-pressed="false">
                 Color
                 <span class="opcion__cuenta">2</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CÁMARAS — acumulable -->
+      <div class="grupo">
+        <button class="grupo__boton" aria-expanded="false" aria-controls="p-camara">
+          Cámaras
+          <span class="grupo__signo" aria-hidden="true"></span>
+        </button>
+        <div class="grupo__panel" id="p-camara">
+          <div class="grupo__lista">
+            <div class="grupo__interior" role="group" aria-label="Cámaras">
+              <!-- data-valor debe coincidir palabra por palabra con el campo
+                   "camera" de filtros.json -->
+              <button class="opcion" data-eje="camara" data-valor="Canon 750D" aria-pressed="false">
+                Canon 750D
+                <span class="opcion__cuenta">0</span>
+              </button>
+              <button class="opcion" data-eje="camara" data-valor="Sony DSC-W730" aria-pressed="false">
+                Sony DSC-W730
+                <span class="opcion__cuenta">0</span>
+              </button>
+              <button class="opcion" data-eje="camara" data-valor="FED-2" aria-pressed="false">
+                FED-2
+                <span class="opcion__cuenta">0</span>
+              </button>
+              <button class="opcion" data-eje="camara" data-valor="Zorki-6" aria-pressed="false">
+                Zorki-6
+                <span class="opcion__cuenta">0</span>
+              </button>
+              <button class="opcion" data-eje="camara" data-valor="Smena-2" aria-pressed="false">
+                Smena-2
+                <span class="opcion__cuenta">0</span>
+              </button>
+              <button class="opcion" data-eje="camara" data-valor="Olympus Superzoom 70S" aria-pressed="false">
+                Olympus Superzoom 70S
+                <span class="opcion__cuenta">0</span>
               </button>
             </div>
           </div>
@@ -946,61 +986,32 @@ a{color:inherit;text-decoration:none}
 </div>
 
 <script>
-(function(){
+(async function(){
   'use strict';
 
   /* ══════════════════════════════════════════════════════════════════
-     ⬇  TUS FOTOS  ⬇
-     Aquí es lo ÚNICO que necesitas tocar para añadir o cambiar fotos.
-
-     Copia una línea, pégala, y edita los datos entre comillas.
-     Cada foto tiene:
-
-       archivo  : nombre del archivo, dentro de la carpeta "fotos/"
-       lugar    : el texto que aparece sobre la foto (barrio, ciudad…)
-       ciudad   : una de → madrid, lisboa, oporto, tanger, napoles
-       formato  : digital  o  analogico
-       color    : "bn" si es blanco y negro,  "color" si es en color
-
-     El orden de la lista es el orden en que se ven en la galería.
-     No hace falta saber programar: respeta las comillas y las comas.
+     Las fotos viven en filtros.json y los separadores (conceptos y
+     haikus) en separadores.json, ambos junto a este HTML.
+     Para añadir o cambiar algo, edita esos archivos — aquí no hace
+     falta tocar nada.
      ══════════════════════════════════════════════════════════════════ */
-
-  const MIS_FOTOS = [
-    /* Datos provisionales: cambia "lugar", "ciudad", "formato" y "color"
-       por los reales de cada foto. */
-    { archivo:"IMG_1967.jpg", lugar:"", ciudad:"madrid", formato:"digital",   color:"bn"    },
-    { archivo:"IMG_2639.jpg", lugar:"", ciudad:"madrid", formato:"digital",   color:"bn"    },
-    { archivo:"IMG_4044.jpg", lugar:"", ciudad:"madrid", formato:"digital",   color:"color" },
-    { archivo:"IMG_4056.jpg", lugar:"", ciudad:"madrid", formato:"digital",   color:"bn"    },
-    { archivo:"IMG_4178.jpg", lugar:"", ciudad:"madrid", formato:"analogico", color:"bn"    },
-    { archivo:"IMG_4300.jpg", lugar:"", ciudad:"madrid", formato:"analogico", color:"color" },
-    { archivo:"IMG_4337.jpg", lugar:"", ciudad:"madrid", formato:"analogico", color:"bn"    },
-  ];
-
-  /* ── Textos japoneses intercalados en la galería (portada) ──
-     Puedes cambiar el kanji, el nombre o los versos. Tipos:
-       "concepto" → kanji + nombre (fondo pino, sumi o papel)
-       "haiku"    → tres versos                                    */
-  const MIS_TEXTOS = [
-    { tipo:"concepto", kanji:"間", nombre:"Ma · el intervalo",        fondo:"pino"  },
-    { tipo:"haiku",    versos:["Alguien dobla","la esquina —","ya no vuelve."] },
-    { tipo:"concepto", kanji:"静", nombre:"Seijaku · la quietud",     fondo:"papel" },
-    { tipo:"concepto", kanji:"寂", nombre:"Wabi-sabi · lo imperfecto", fondo:"papel", izq:true },
-    { tipo:"concepto", kanji:"幽", nombre:"Yūgen · lo que no se ve",   fondo:"sumi"  },
-    { tipo:"haiku",    versos:["Grano, mancha,","un dedo en el borde —","así la quiero."] },
-    { tipo:"concepto", kanji:"影", nombre:"Kage · la sombra",         fondo:"sumi", izq:true },
-    { tipo:"haiku",    versos:["Se apaga el semáforo.","Nadie sabe que esto","fue lo último."], der:true },
-    { tipo:"concepto", kanji:"侘", nombre:"Wabi · lo sencillo",       fondo:"pino", izq:true },
-  ];
 
   /* Carpeta donde están tus imágenes (relativa al HTML) */
   const CARPETA = "fotos/";
 
-  /* ══════════════════════════════════════════════════════════════════
-     A partir de aquí NO necesitas tocar nada: el mosaico se construye
-     solo con las listas de arriba.
-     ══════════════════════════════════════════════════════════════════ */
+  /* filtros.json usa nombres de campo propios (filename, city,
+     capture_type, color_mode…); esto los traduce a lo que espera
+     crearFoto */
+  function normalizarFoto(p){
+    return {
+      archivo: p.filename,
+      lugar:   p.place || '',
+      ciudad:  (p.city || '').toLowerCase(),
+      formato: p.capture_type,
+      color:   p.color_mode,
+      camara:  p.camera || ''
+    };
+  }
 
   /* Crea el elemento de una foto */
   function crearFoto(f, prioritaria){
@@ -1009,6 +1020,7 @@ a{color:inherit;text-decoration:none}
     fig.dataset.formato = f.formato;
     fig.dataset.ciudad  = f.ciudad;
     fig.dataset.trato   = f.color;
+    if(f.camara) fig.dataset.camara = f.camara;
 
     const img = document.createElement('img');
     img.src = CARPETA + f.archivo;
@@ -1062,8 +1074,17 @@ a{color:inherit;text-decoration:none}
 
   /* Reparte fotos y textos en las tres columnas de forma pareja,
      intercalando los separadores (conceptos y haikus) en una
-     posición al azar dentro de cada columna, distinta en cada carga */
-  function construirMosaico(){
+     posición al azar dentro de cada columna, distinta en cada carga.
+     Las fotos vienen de filtros.json y los separadores de
+     separadores.json. */
+  async function construirMosaico(){
+    const [datosFotos, datosTextos] = await Promise.all([
+      fetch('filtros.json').then(r => r.json()),
+      fetch('separadores.json').then(r => r.json())
+    ]);
+    const MIS_FOTOS  = (datosFotos.photos || []).map(normalizarFoto);
+    const MIS_TEXTOS = datosTextos.separadores || [];
+
     const colsEl = [
       document.querySelector('.columna--a'),
       document.querySelector('.columna--b'),
@@ -1102,7 +1123,14 @@ a{color:inherit;text-decoration:none}
     porColumna.forEach((col, i) => col.forEach(el => colsEl[i].appendChild(el)));
   }
 
-  construirMosaico();
+  try{
+    await construirMosaico();
+  }catch(err){
+    console.error('No se pudieron cargar filtros.json / separadores.json:', err);
+    document.getElementById('mosaico').textContent =
+      'No se han podido cargar las fotos. Si estás abriendo el archivo directamente, sírvelo con un servidor local (fetch no funciona con file://).';
+    return;
+  }
 
   const elementos = document.querySelectorAll('.al-entrar');
   const sinMovimiento = !window.IntersectionObserver
@@ -1133,7 +1161,8 @@ a{color:inherit;text-decoration:none}
 
   /* ---------- Filtrado ---------- */
   const EXCLUYENTES = ['formato','trato'];   // una opción a la vez
-  const estado = { formato:null, ciudad:new Set(), trato:null };
+  /* los ejes que no son excluyentes acumulan varias opciones a la vez */
+  const estado = { formato:null, ciudad:new Set(), trato:null, camara:new Set() };
 
   const fotos   = Array.from(document.querySelectorAll('[data-formato]'));
   const opciones = Array.from(document.querySelectorAll('.opcion'));
@@ -1149,6 +1178,19 @@ a{color:inherit;text-decoration:none}
       hijo.dataset.ordenOrigen = hi;
     });
   });
+
+  /* Pone en cada opción cuántas fotos la cumplen, leyéndolo de las propias
+     fotos: así los números salen de filtros.json y no hay que tocarlos
+     a mano en el HTML */
+  function actualizarCuentas(){
+    opciones.forEach(op => {
+      const casilla = op.querySelector('.opcion__cuenta');
+      if(!casilla) return;
+      casilla.textContent = fotos.filter(
+        f => f.dataset[op.dataset.eje] === op.dataset.valor
+      ).length;
+    });
+  }
 
   /* Orden global de una foto (columna, posición) para apilarlas de forma
      coherente en la vista filtrada */
@@ -1185,13 +1227,15 @@ a{color:inherit;text-decoration:none}
   }
 
   function hayFiltros(){
-    return estado.formato !== null || estado.trato !== null || estado.ciudad.size > 0;
+    return estado.formato !== null || estado.trato !== null
+        || estado.ciudad.size > 0  || estado.camara.size > 0;
   }
 
   function encaja(foto){
     if(estado.formato && foto.dataset.formato !== estado.formato) return false;
     if(estado.trato   && foto.dataset.trato   !== estado.trato)   return false;
     if(estado.ciudad.size && !estado.ciudad.has(foto.dataset.ciudad)) return false;
+    if(estado.camara.size && !estado.camara.has(foto.dataset.camara)) return false;
     return true;
   }
 
@@ -1236,15 +1280,17 @@ a{color:inherit;text-decoration:none}
         estado[eje] = activa ? null : valor;
         if(!activa) op.setAttribute('aria-pressed','true');
       } else {
-        if(activa){ estado.ciudad.delete(valor); op.setAttribute('aria-pressed','false'); }
-        else      { estado.ciudad.add(valor);    op.setAttribute('aria-pressed','true');  }
+        const conjunto = estado[eje];
+        if(activa){ conjunto.delete(valor); op.setAttribute('aria-pressed','false'); }
+        else      { conjunto.add(valor);    op.setAttribute('aria-pressed','true');  }
       }
       aplicar();
     });
   });
 
   function quitarFiltros(){
-    estado.formato = null; estado.trato = null; estado.ciudad.clear();
+    estado.formato = null; estado.trato = null;
+    estado.ciudad.clear(); estado.camara.clear();
     opciones.forEach(o => o.setAttribute('aria-pressed','false'));
     aplicar();
   }
@@ -1282,7 +1328,7 @@ a{color:inherit;text-decoration:none}
 
   function datosFoto(foto){
     const d = foto.dataset;
-    const partes = [ETIQUETAS[d.ciudad], ETIQUETAS[d.formato], ETIQUETAS[d.trato]]
+    const partes = [ETIQUETAS[d.ciudad], ETIQUETAS[d.formato], ETIQUETAS[d.trato], d.camara]
                      .filter(Boolean);
     return partes.join(' · ');
   }
@@ -1373,6 +1419,7 @@ a{color:inherit;text-decoration:none}
     xInicio = yInicio = null;
   }, { passive:true });
 
+  actualizarCuentas();
   recalcularVisibles();
   anunciar();
 })();

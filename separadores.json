@@ -1,0 +1,13 @@
+{
+  "separadores": [
+    { "tipo": "concepto", "kanji": "間", "nombre": "Ma · el intervalo", "fondo": "pino" },
+    { "tipo": "haiku", "versos": ["Alguien dobla", "la esquina —", "ya no vuelve."] },
+    { "tipo": "concepto", "kanji": "静", "nombre": "Seijaku · la quietud", "fondo": "papel" },
+    { "tipo": "concepto", "kanji": "寂", "nombre": "Wabi-sabi · lo imperfecto", "fondo": "papel", "izq": true },
+    { "tipo": "concepto", "kanji": "幽", "nombre": "Yūgen · lo que no se ve", "fondo": "sumi" },
+    { "tipo": "haiku", "versos": ["Grano, mancha,", "un dedo en el borde —", "así la quiero."] },
+    { "tipo": "concepto", "kanji": "影", "nombre": "Kage · la sombra", "fondo": "sumi", "izq": true },
+    { "tipo": "haiku", "versos": ["Se apaga el semáforo.", "Nadie sabe que esto", "fue lo último."], "der": true },
+    { "tipo": "concepto", "kanji": "侘", "nombre": "Wabi · lo sencillo", "fondo": "pino", "izq": true }
+  ]
+}

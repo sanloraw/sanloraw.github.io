@@ -1,0 +1,67 @@
+{
+  "photos": [
+    {
+      "id": 1,
+      "filename": "IMG_1967.jpg",
+      "place": "",
+      "city": "Madrid",
+      "camera": "Sony DSC-W730",
+      "capture_type": "digital",
+      "color_mode": "bn"
+    },
+    {
+      "id": 2,
+      "filename": "IMG_2639.jpg",
+      "place": "",
+      "city": "Madrid",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
+      "color_mode": "bn"
+    },
+    {
+      "id": 3,
+      "filename": "IMG_4044.jpg",
+      "place": "",
+      "city": "Madrid",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
+      "color_mode": "color"
+    },
+    {
+      "id": 4,
+      "filename": "IMG_4056.jpg",
+      "place": "",
+      "city": "Madrid",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
+      "color_mode": "bn"
+    },
+    {
+      "id": 5,
+      "filename": "IMG_4178.jpg",
+      "place": "",
+      "city": "Madrid",
+      "camera": "FED-2",
+      "capture_type": "analogico",
+      "color_mode": "bn"
+    },
+    {
+      "id": 6,
+      "filename": "IMG_4300.jpg",
+      "place": "",
+      "city": "Madrid",
+      "camera": "Smena-2",
+      "capture_type": "analogico",
+      "color_mode": "color"
+    },
+    {
+      "id": 7,
+      "filename": "IMG_4337.jpg",
+      "place": "",
+      "city": "Madrid",
+      "camera": "FED-2",
+      "capture_type": "analogico",
+      "color_mode": "bn"
+    }
+  ]
+}
