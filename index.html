@@ -438,12 +438,11 @@ a{color:inherit;text-decoration:none}
   width:100%;
   height:auto;          /* la altura la manda la foto */
   display:block;
-  transition:transform 2.6s cubic-bezier(.16,.84,.44,1), filter var(--lenta);
+  transition:transform 2.6s cubic-bezier(.16,.84,.44,1);
 }
 .tesela--foto:hover img{transform:scale(1.03)}
 
-.mono{filter:grayscale(1) sepia(.12) contrast(1.05) brightness(1.01)}
-.tesela--foto:hover img.mono{filter:grayscale(.85) sepia(.1) contrast(1.06)}
+/* Las fotografías se muestran tal cual: ningún filtro las retoca */
 
 .tesela--foto::after{
   content:'';position:absolute;inset:0;
@@ -1021,7 +1020,6 @@ a{color:inherit;text-decoration:none}
     const img = document.createElement('img');
     img.src = CARPETA + f.archivo;
     img.alt = f.lugar || '';
-    if(f.color === 'bn') img.classList.add('mono');
     img.loading = prioritaria ? 'eager' : 'lazy';
     /* Si defines ancho/alto reales, evitas saltos al cargar (opcional) */
     if(f.ancho && f.alto){ img.width = f.ancho; img.height = f.alto; }
@@ -1346,8 +1344,6 @@ a{color:inherit;text-decoration:none}
     visorImg.onload = () => visorImg.classList.add('cargada');
     visorImg.src = img.currentSrc || img.src;
     visorImg.alt = img.alt || '';
-    /* hereda el tratamiento (blanco y negro o color) de la foto */
-    visorImg.classList.toggle('mono', img.classList.contains('mono'));
     if(visorImg.complete) visorImg.classList.add('cargada');
 
     const rotulo = foto.querySelector('.tesela__rotulo');
