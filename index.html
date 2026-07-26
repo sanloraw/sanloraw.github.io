@@ -547,9 +547,12 @@ a{color:inherit;text-decoration:none}
 /* ============================================
    VISOR — pantalla completa, una foto, con flechas
    ============================================ */
+/* Dos columnas de altura completa: la foto a la izquierda y su ficha a
+   la derecha, como una segunda página. */
 .visor{
   position:fixed;inset:0;z-index:200;
-  display:flex;flex-direction:column;
+  display:grid;
+  grid-template-columns:1fr clamp(300px,29vw,460px);
   background:rgba(244,239,230,.94);
   backdrop-filter:blur(30px) saturate(1.05);
   -webkit-backdrop-filter:blur(30px) saturate(1.05);
@@ -557,6 +560,11 @@ a{color:inherit;text-decoration:none}
   transition:opacity var(--media), visibility var(--media);
 }
 .visor.abierto{opacity:1;visibility:visible}
+
+.visor__principal{
+  display:flex;flex-direction:column;
+  min-width:0;min-height:0;
+}
 
 /* Barra superior: contador y cierre */
 .visor__barra{
@@ -586,51 +594,75 @@ a{color:inherit;text-decoration:none}
 .visor__escena{
   flex:1 1 auto;
   display:flex;align-items:center;justify-content:center;
-  padding:0 clamp(4rem,10vw,7rem) clamp(1.5rem,4vw,3rem);
-  min-height:0;
+  padding:0 clamp(4rem,7vw,6rem) clamp(1.5rem,4vw,3rem);
+  min-height:0;min-width:0;
   position:relative;   /* ancla de las flechas */
 }
 
 .visor__figura{
-  display:flex;flex-direction:column;align-items:center;
-  gap:1.2rem;
-  max-width:100%;max-height:100%;
-  min-width:0;
+  display:flex;align-items:center;justify-content:center;
+  /* alto definido: sin él, el max-height en porcentaje de la imagen no
+     tiene contra qué resolverse y la foto se sale en pantallas bajas */
+  width:100%;height:100%;
+  min-width:0;min-height:0;
 }
 .visor__figura img{
   max-width:100%;
-  /* se descuenta el alto del pie: si no, en pantallas bajas la imagen se
-     queda con todo el sitio y la ficha se sale de la escena */
-  max-height:calc(76vh - 6rem);
+  max-height:100%;
   width:auto;height:auto;
   object-fit:contain;
   opacity:0;
   transition:opacity var(--media);
 }
 .visor__figura img.cargada{opacity:1}
-/* El pie del visor manda: dos alturas de lectura, el sitio arriba en
-   grande y la ficha técnica debajo */
-.visor__pie{
-  display:flex;flex-direction:column;align-items:center;
-  gap:.8rem;text-align:center;
+
+/* --- FICHA LATERAL ---
+   Superficie propia, no texto flotando: fondo sólido sobre el velado del
+   visor, de arriba abajo de la pantalla. */
+.ficha{
+  background:var(--luz);
+  border-left:1px solid var(--lino);
+  padding:clamp(2rem,3.5vw,3.4rem) clamp(1.8rem,3vw,3rem);
+  display:flex;flex-direction:column;
+  gap:2.4rem;
+  overflow-y:auto;
+  min-height:0;
+  scrollbar-width:thin;
+  scrollbar-color:var(--lino) transparent;
 }
-.visor__pie .lugar{
-  font-family:var(--serif);font-style:italic;
-  font-size:clamp(1.35rem,1.1rem + 1vw,2rem);
-  line-height:1;letter-spacing:.03em;
+.ficha__titulo{
+  font-family:var(--serif);font-style:italic;font-weight:300;
+  font-size:clamp(2.4rem,1.6rem + 2.4vw,4rem);
+  line-height:.95;letter-spacing:-.01em;
   color:var(--sumi);
-  position:relative;padding-bottom:.75rem;
+  position:relative;padding-bottom:1.4rem;
+  flex:0 0 auto;
 }
-/* Filete en roble bajo el título, como el de la cabecera de la galería */
-.visor__pie .lugar::after{
-  content:'';position:absolute;left:50%;bottom:0;
-  width:34px;height:1px;margin-left:-17px;
-  background:var(--roble);
+.ficha__titulo::after{
+  content:'';position:absolute;left:0;bottom:0;
+  width:54px;height:2px;background:var(--roble);
 }
-.visor__pie .lugar:empty{display:none}
-.visor__pie .dato{
-  font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;
-  color:var(--ceniza);
+.ficha__titulo:empty{display:none}
+
+/* Cada dato, una fila con su rótulo encima del valor: el valor manda y
+   el rótulo lo acompaña, en vez de competir en la misma línea */
+.ficha__lista{display:flex;flex-direction:column}
+.ficha__fila{
+  display:flex;flex-direction:column;
+  gap:.45rem;
+  padding:1.15rem 0;
+  border-top:1px solid var(--lino);
+}
+.ficha__fila:last-child{border-bottom:1px solid var(--lino)}
+.ficha__fila dt{
+  font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--niebla);
+}
+.ficha__fila dd{
+  font-family:var(--serif);
+  font-size:clamp(1.15rem,1rem + .4vw,1.5rem);
+  line-height:1.15;letter-spacing:.01em;
+  color:var(--sumi);
 }
 
 /* Flechas: ancladas a los bordes de la escena, en la misma posición
@@ -665,6 +697,59 @@ a{color:inherit;text-decoration:none}
 .visor__flecha:disabled:hover{border-color:var(--lino);background:none}
 .visor__flecha:disabled:hover::before{border-color:var(--sumi)}
 
+/* Sin sitio para dos franjas: la ficha pasa debajo de la foto y se
+   reparte en filas anchas, sin dejar de ser una región propia */
+/* Sin sitio para dos columnas: la ficha pasa debajo de la foto, en una
+   banda propia con los datos en fila */
+@media (max-width:880px){
+  .visor{
+    grid-template-columns:1fr;
+    grid-template-rows:minmax(0,1fr) auto;
+  }
+  .visor__escena{padding-bottom:clamp(1rem,3vw,2rem)}
+  .ficha{
+    border-left:none;
+    border-top:1px solid var(--lino);
+    gap:1.1rem;
+    overflow:visible;
+    padding:clamp(1.3rem,4vw,2rem) clamp(1.5rem,5vw,2rem);
+  }
+  .ficha__titulo{
+    font-size:clamp(1.9rem,1.5rem + 1.6vw,2.6rem);
+    padding-bottom:.9rem;
+  }
+  .ficha__titulo::after{width:44px}
+  .ficha__lista{
+    flex-direction:row;flex-wrap:wrap;
+    gap:0 clamp(1.5rem,6vw,3rem);
+    border-top:1px solid var(--lino);
+    padding-top:1.1rem;
+  }
+  .ficha__fila{
+    border:none;padding:0;
+    gap:.3rem;
+    flex:0 0 auto;
+  }
+  .ficha__fila:last-child{border-bottom:none}
+  .ficha__fila dd{font-size:clamp(1rem,.9rem + .4vw,1.2rem)}
+}
+
+/* Pantalla baja y apaisada (el móvil girado): la ficha se aprieta para
+   no dejar a la fotografía sin sitio */
+@media (max-height:520px) and (max-width:880px){
+  .ficha{
+    gap:.5rem;
+    padding:.9rem clamp(1.5rem,5vw,2rem);
+  }
+  .ficha__titulo{
+    font-size:1.5rem;
+    padding-bottom:.5rem;
+  }
+  .ficha__lista{padding-top:.6rem}
+  .ficha__fila dd{font-size:.95rem}
+  .visor__barra{padding-block:.7rem}
+}
+
 @media (max-width:640px){
   .visor__escena{
     padding-inline:0;
@@ -677,7 +762,6 @@ a{color:inherit;text-decoration:none}
   }
   .visor__flecha--prev{left:.6rem}
   .visor__flecha--next{right:.6rem}
-  .visor__figura img{max-height:calc(70vh - 6rem)}
   /* Cerrar más grande y fácil de acertar */
   .visor__cerrar{width:40px;height:40px}
   .visor__barra{padding:1.2rem 1.4rem}
@@ -983,21 +1067,24 @@ a{color:inherit;text-decoration:none}
 
 <!-- VISOR -->
 <div class="visor" id="visor" role="dialog" aria-modal="true" aria-label="Visor de fotografías" hidden>
-  <div class="visor__barra">
-    <span class="visor__cuenta" id="visor-cuenta"></span>
-    <button class="visor__cerrar" type="button" aria-label="Cerrar visor"></button>
+  <div class="visor__principal">
+    <div class="visor__barra">
+      <span class="visor__cuenta" id="visor-cuenta"></span>
+      <button class="visor__cerrar" type="button" aria-label="Cerrar visor"></button>
+    </div>
+    <div class="visor__escena">
+      <button class="visor__flecha visor__flecha--prev" type="button" aria-label="Anterior"></button>
+      <figure class="visor__figura">
+        <img id="visor-img" src="" alt="">
+      </figure>
+      <button class="visor__flecha visor__flecha--next" type="button" aria-label="Siguiente"></button>
+    </div>
   </div>
-  <div class="visor__escena">
-    <button class="visor__flecha visor__flecha--prev" type="button" aria-label="Anterior"></button>
-    <figure class="visor__figura">
-      <img id="visor-img" src="" alt="">
-      <figcaption class="visor__pie">
-        <span class="lugar" id="visor-lugar"></span>
-        <span class="dato" id="visor-dato"></span>
-      </figcaption>
-    </figure>
-    <button class="visor__flecha visor__flecha--next" type="button" aria-label="Siguiente"></button>
-  </div>
+
+  <aside class="ficha" aria-label="Datos de la fotografía">
+    <h2 class="ficha__titulo" id="visor-lugar"></h2>
+    <dl class="ficha__lista" id="visor-lista"></dl>
+  </aside>
 </div>
 
 <script>
@@ -1380,7 +1467,7 @@ a{color:inherit;text-decoration:none}
   const visor      = document.getElementById('visor');
   const visorImg   = document.getElementById('visor-img');
   const visorLugar = document.getElementById('visor-lugar');
-  const visorDato  = document.getElementById('visor-dato');
+  const visorLista = document.getElementById('visor-lista');
   const visorCuenta= document.getElementById('visor-cuenta');
   const btnPrev    = visor.querySelector('.visor__flecha--prev');
   const btnNext    = visor.querySelector('.visor__flecha--next');
@@ -1396,21 +1483,39 @@ a{color:inherit;text-decoration:none}
     tanger:'Tánger', napoles:'Nápoles'
   };
 
-  /* Parte el pie en dos: un título y una ficha técnica. Encabeza el lugar
-     y, mientras no lo hayas escrito, sube la ciudad a ese puesto para que
-     el pie nunca quede huérfano de título. */
-  function pieDeFoto(foto){
+  /* Datos de la ficha: un título y una lista de pares rótulo/valor.
+     Encabeza el lugar y, mientras no lo hayas escrito, sube la ciudad a
+     ese puesto para que la ficha no quede huérfana de título. */
+  function fichaDeFoto(foto){
     const d = foto.dataset;
     const rotulo = foto.querySelector('.tesela__rotulo');
     const lugar  = rotulo ? rotulo.textContent.trim() : '';
     const ciudad = ETIQUETAS[d.ciudad] || '';
-    const resto  = [
-      lugar ? ciudad : null,     /* si el lugar encabeza, la ciudad baja */
-      ETIQUETAS[d.formato],
-      ETIQUETAS[d.trato],
-      d.camara
+    const filas  = [
+      /* si el lugar ya encabeza, la ciudad baja a la lista */
+      lugar ? ['Ciudad', ciudad] : null,
+      d.camara            ? ['Cámara', d.camara]                 : null,
+      ETIQUETAS[d.formato]? ['Formato', ETIQUETAS[d.formato]]    : null,
+      ETIQUETAS[d.trato]  ? ['Tratamiento', ETIQUETAS[d.trato]]  : null
     ].filter(Boolean);
-    return { titulo: lugar || ciudad, dato: resto.join(' · ') };
+    return { titulo: lugar || ciudad, filas };
+  }
+
+  /* Vuelca la ficha en el panel */
+  function pintarFicha(foto){
+    const { titulo, filas } = fichaDeFoto(foto);
+    visorLugar.textContent = titulo;
+    visorLista.textContent = '';
+    filas.forEach(([rotulo, valor]) => {
+      const fila = document.createElement('div');
+      fila.className = 'ficha__fila';
+      const dt = document.createElement('dt');
+      dt.textContent = rotulo;
+      const dd = document.createElement('dd');
+      dd.textContent = valor;
+      fila.append(dt, dd);
+      visorLista.appendChild(fila);
+    });
   }
 
   function mostrar(i){
@@ -1425,9 +1530,7 @@ a{color:inherit;text-decoration:none}
     visorImg.alt = img.alt || '';
     if(visorImg.complete) visorImg.classList.add('cargada');
 
-    const pie = pieDeFoto(foto);
-    visorLugar.textContent = pie.titulo;
-    visorDato.textContent  = pie.dato;
+    pintarFicha(foto);
     visorCuenta.textContent = `${i + 1} / ${visibles.length}`;
 
     btnPrev.disabled = i === 0;
