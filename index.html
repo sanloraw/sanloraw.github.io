@@ -560,7 +560,7 @@ a{color:inherit;text-decoration:none}
 .visor{
   position:fixed;inset:0;z-index:200;
   display:grid;
-  grid-template-columns:1fr clamp(300px,29vw,460px);
+  grid-template-columns:1fr clamp(260px,22vw,340px);
   background:rgba(244,239,230,.94);
   backdrop-filter:blur(30px) saturate(1.05);
   -webkit-backdrop-filter:blur(30px) saturate(1.05);
@@ -574,9 +574,9 @@ a{color:inherit;text-decoration:none}
   min-width:0;min-height:0;
 }
 
-/* Barra superior: contador y cierre */
+/* Barra superior: solo el cierre. El contador se fue a la ficha. */
 .visor__barra{
-  display:flex;align-items:center;justify-content:space-between;
+  display:flex;align-items:center;justify-content:flex-end;
   padding:clamp(1.2rem,3vw,2rem) clamp(1.5rem,4vw,3rem);
   flex:0 0 auto;
 }
@@ -627,50 +627,56 @@ a{color:inherit;text-decoration:none}
 /* --- FICHA LATERAL ---
    Superficie propia, no texto flotando: fondo sólido sobre el velado del
    visor, de arriba abajo de la pantalla. */
+/* Como una cartela: el contador arriba y el bloque de datos al pie. El
+   hueco queda en medio, sujeto por los dos extremos, en vez de sobrar
+   al final. */
 .ficha{
   background:var(--luz);
   border-left:1px solid var(--lino);
-  padding:clamp(2rem,3.5vw,3.4rem) clamp(1.8rem,3vw,3rem);
-  display:flex;flex-direction:column;
-  gap:2.4rem;
+  padding:clamp(1.4rem,3vw,2rem) clamp(1.4rem,2.4vw,2.2rem);
+  display:flex;flex-direction:column;justify-content:flex-end;
   overflow-y:auto;
   min-height:0;
   scrollbar-width:thin;
   scrollbar-color:var(--lino) transparent;
 }
+/* el margen automático empuja todo lo demás al fondo */
+.ficha .visor__cuenta{margin-bottom:auto}
+
 .ficha__titulo{
   font-family:var(--serif);font-style:italic;font-weight:300;
-  font-size:clamp(2.4rem,1.6rem + 2.4vw,4rem);
-  line-height:.95;letter-spacing:-.01em;
+  font-size:clamp(1.7rem,1.3rem + 1.2vw,2.3rem);
+  line-height:1;letter-spacing:-.01em;
   color:var(--sumi);
-  position:relative;padding-bottom:1.4rem;
+  position:relative;padding-bottom:.75rem;
+  margin-bottom:1.3rem;
   flex:0 0 auto;
 }
 .ficha__titulo::after{
   content:'';position:absolute;left:0;bottom:0;
-  width:54px;height:2px;background:var(--roble);
+  width:34px;height:1px;background:var(--roble);
 }
 .ficha__titulo:empty{display:none}
 
-/* Cada dato, una fila con su rótulo encima del valor: el valor manda y
-   el rótulo lo acompaña, en vez de competir en la misma línea */
+/* Rótulo y valor en el mismo renglón: es lo que más alto ahorra */
 .ficha__lista{display:flex;flex-direction:column}
 .ficha__fila{
-  display:flex;flex-direction:column;
-  gap:.45rem;
-  padding:1.15rem 0;
-  border-top:1px solid var(--lino);
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:1rem;
+  padding:.7rem 0;
+  border-top:1px solid var(--tatami);
 }
-.ficha__fila:last-child{border-bottom:1px solid var(--lino)}
+.ficha__fila:last-child{border-bottom:1px solid var(--tatami)}
 .ficha__fila dt{
-  font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;
+  font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;
   color:var(--niebla);
+  flex:0 0 auto;
 }
 .ficha__fila dd{
-  font-family:var(--serif);
-  font-size:clamp(1.15rem,1rem + .4vw,1.5rem);
-  line-height:1.15;letter-spacing:.01em;
+  font-size:.82rem;letter-spacing:.02em;
   color:var(--sumi);
+  text-align:right;
+  min-width:0;
 }
 
 /* Flechas: ancladas a los bordes de la escena, en la misma posición
@@ -705,10 +711,9 @@ a{color:inherit;text-decoration:none}
 .visor__flecha:disabled:hover{border-color:var(--lino);background:none}
 .visor__flecha:disabled:hover::before{border-color:var(--sumi)}
 
-/* Sin sitio para dos franjas: la ficha pasa debajo de la foto y se
-   reparte en filas anchas, sin dejar de ser una región propia */
 /* Sin sitio para dos columnas: la ficha pasa debajo de la foto, en una
-   banda propia con los datos en fila */
+   banda propia. Ahí no hay hueco que repartir, así que el contador se
+   pone en línea con el título y los datos se reparten a lo ancho. */
 @media (max-width:880px){
   .visor{
     grid-template-columns:1fr;
@@ -718,43 +723,41 @@ a{color:inherit;text-decoration:none}
   .ficha{
     border-left:none;
     border-top:1px solid var(--lino);
-    gap:1.1rem;
+    justify-content:flex-start;
     overflow:visible;
-    padding:clamp(1.3rem,4vw,2rem) clamp(1.5rem,5vw,2rem);
+    padding:clamp(1.1rem,3.5vw,1.6rem) clamp(1.5rem,5vw,2rem) clamp(1.3rem,4vw,1.8rem);
   }
+  .ficha .visor__cuenta{margin-bottom:.5rem}
   .ficha__titulo{
-    font-size:clamp(1.9rem,1.5rem + 1.6vw,2.6rem);
-    padding-bottom:.9rem;
+    font-size:clamp(1.6rem,1.35rem + 1vw,2rem);
+    padding-bottom:.7rem;
+    margin-bottom:1rem;
   }
-  .ficha__titulo::after{width:44px}
   .ficha__lista{
     flex-direction:row;flex-wrap:wrap;
     gap:0 clamp(1.5rem,6vw,3rem);
-    border-top:1px solid var(--lino);
-    padding-top:1.1rem;
+    border-top:1px solid var(--tatami);
+    padding-top:.9rem;
   }
   .ficha__fila{
     border:none;padding:0;
-    gap:.3rem;
+    gap:.5rem;
     flex:0 0 auto;
   }
   .ficha__fila:last-child{border-bottom:none}
-  .ficha__fila dd{font-size:clamp(1rem,.9rem + .4vw,1.2rem)}
 }
 
 /* Pantalla baja y apaisada (el móvil girado): la ficha se aprieta para
    no dejar a la fotografía sin sitio */
 @media (max-height:520px) and (max-width:880px){
-  .ficha{
-    gap:.5rem;
-    padding:.9rem clamp(1.5rem,5vw,2rem);
-  }
+  .ficha{padding-block:.8rem}
+  .ficha .visor__cuenta{margin-bottom:.3rem}
   .ficha__titulo{
-    font-size:1.5rem;
-    padding-bottom:.5rem;
+    font-size:1.4rem;
+    padding-bottom:.45rem;
+    margin-bottom:.7rem;
   }
   .ficha__lista{padding-top:.6rem}
-  .ficha__fila dd{font-size:.95rem}
   .visor__barra{padding-block:.7rem}
 }
 
@@ -1077,7 +1080,6 @@ a{color:inherit;text-decoration:none}
 <div class="visor" id="visor" role="dialog" aria-modal="true" aria-label="Visor de fotografías" hidden>
   <div class="visor__principal">
     <div class="visor__barra">
-      <span class="visor__cuenta" id="visor-cuenta"></span>
       <button class="visor__cerrar" type="button" aria-label="Cerrar visor"></button>
     </div>
     <div class="visor__escena">
@@ -1090,6 +1092,7 @@ a{color:inherit;text-decoration:none}
   </div>
 
   <aside class="ficha" aria-label="Datos de la fotografía">
+    <span class="visor__cuenta" id="visor-cuenta"></span>
     <h2 class="ficha__titulo" id="visor-lugar"></h2>
     <dl class="ficha__lista" id="visor-lista"></dl>
   </aside>
