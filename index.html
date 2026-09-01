@@ -47,6 +47,7 @@
 
   --barra:210px;
   --junta:10px;
+  --junta-ancha:clamp(1rem,2.5vw,2rem);  /* la de la vista filtrada */
   --bastidor:1px;
 }
 
@@ -426,21 +427,31 @@ a{color:inherit;text-decoration:none}
 /* --- MODO FILTRADO ---
    Al elegir una opción, la vista se limpia por completo: fuera cabecera,
    conceptos, haikus y archivo (exclusivos de la portada). Las fotos que
-   cumplen el filtro se muestran de dos en dos, grandes y a tamaño completo.
-   Cada una abre el visor a pantalla completa al pulsarla. */
+   cumplen el filtro se muestran en dos columnas, grandes y a tamaño completo.
+   Cada una abre el visor a pantalla completa al pulsarla.
+
+   Aquí no vale una retícula: en ella las celdas de una misma fila igualan
+   altura, así que una vertical a la derecha abría un socavón bajo la
+   horizontal de la izquierda. Con columnas de verdad cada foto se apoya
+   en la de arriba y el hueco desaparece; el aire entre ellas se mantiene. */
 .mosaico.filtrando{
-  grid-template-columns:repeat(2,1fr);
-  gap:clamp(1rem,2.5vw,2rem);
+  display:block;
+  column-count:2;
+  column-gap:var(--junta-ancha);
   border:none;
   padding:0;
-  align-items:start;
 }
 .mosaico.filtrando::before,
 .mosaico.filtrando::after{display:none}
 .mosaico.filtrando .columna{
-  display:contents;   /* las fotos suben al grid del mosaico */
+  display:contents;   /* las fotos pasan al flujo de las columnas */
 }
-.mosaico.filtrando .tesela{align-self:start}
+/* Ninguna foto se parte por la mitad al cambiar de columna, y la junta
+   entre unas y otras la pone cada tesela por debajo */
+.mosaico.filtrando .tesela{
+  break-inside:avoid;
+  margin:0 0 var(--junta-ancha);
+}
 .mosaico.filtrando .tesela--foto{cursor:zoom-in}
 .mosaico.filtrando .tesela--foto img{height:auto}
 /* Rótulo siempre visible en la vista filtrada */
@@ -877,7 +888,7 @@ a{color:inherit;text-decoration:none}
   .columna--c{display:flex}
   .columna--c > *{grid-column:auto}
   /* En móvil, filtrado a una sola foto por fila */
-  .mosaico.filtrando{grid-template-columns:1fr}
+  .mosaico.filtrando{column-count:1}
 
   .concepto{min-height:120px}
   .haiku{min-height:auto;padding-block:var(--ma-s)}
