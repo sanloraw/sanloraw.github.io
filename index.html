@@ -583,13 +583,19 @@ a{color:inherit;text-decoration:none}
 .visor__principal{
   display:flex;flex-direction:column;
   min-width:0;min-height:0;
+  position:relative;   /* ancla del aspa, que ya no ocupa fila */
 }
 
-/* Barra superior: solo el cierre. El contador se fue a la ficha. */
+/* Barra superior: solo el cierre. El contador se fue a la ficha.
+   Flota sobre la escena en vez de ocupar una fila propia. Una fila
+   entera para un aspa de 30px salía cara: a las verticales les sobra
+   anchura y lo que les falta es alto, así que ese hueco es justo el
+   que necesitaban. El aspa queda por fuera de la foto de todos modos,
+   porque la escena reserva su propio margen lateral. */
 .visor__barra{
+  position:absolute;top:0;right:0;z-index:3;
   display:flex;align-items:center;justify-content:flex-end;
   padding:clamp(1.2rem,3vw,2rem) clamp(1.5rem,4vw,3rem);
-  flex:0 0 auto;
 }
 .visor__cuenta{
   font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
@@ -609,11 +615,15 @@ a{color:inherit;text-decoration:none}
 .visor__cerrar::after{transform:rotate(-45deg)}
 .visor__cerrar:hover::before,.visor__cerrar:hover::after{background:var(--roble)}
 
-/* Escenario central */
+/* Escenario central.
+   El margen de arriba y el de abajo se miden en vh, no en vw: es el alto
+   lo que aprieta a la fotografía, y así el aire crece con la pantalla en
+   la dirección que importa. El lateral sigue en vw, que es lo que aparta
+   las flechas. */
 .visor__escena{
   flex:1 1 auto;
   display:flex;align-items:center;justify-content:center;
-  padding:0 clamp(4rem,7vw,6rem) clamp(1.5rem,4vw,3rem);
+  padding:clamp(1.25rem,3vh,2.5rem) clamp(4rem,7vw,6rem);
   min-height:0;min-width:0;
   position:relative;   /* ancla de las flechas */
 }
@@ -784,8 +794,22 @@ a{color:inherit;text-decoration:none}
   }
   .visor__flecha--prev{left:.6rem}
   .visor__flecha--next{right:.6rem}
-  /* Cerrar más grande y fácil de acertar */
-  .visor__cerrar{width:40px;height:40px}
+  /* Cerrar más grande y fácil de acertar. Aquí la escena no tiene margen
+     lateral, así que el aspa puede quedar sobre la propia fotografía:
+     lleva la misma pastilla translúcida que las flechas para leerse
+     igual de bien sea cual sea lo que tenga debajo. */
+  .visor__cerrar{
+    width:40px;height:40px;
+    border-radius:50%;
+    background:rgba(244,239,230,.72);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  /* las aspas se dibujan con ::before/::after al 100% del botón: con la
+     pastilla detrás hay que encogerlas para que no toquen el borde */
+  .visor__cerrar::before,.visor__cerrar::after{
+    left:50%;width:16px;margin-left:-8px;
+  }
   .visor__barra{padding:1.2rem 1.4rem}
   /* La imagen no debe capturar el gesto de deslizar */
   .visor__figura img{touch-action:pan-y}
