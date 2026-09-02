@@ -30,6 +30,7 @@
       "height": 1333,
       "place": "",
       "city": "Madrid",
+      "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
       "color_mode": "color"
@@ -41,9 +42,10 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
+      "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "bn"
+      "color_mode": "color"
     },
     {
       "id": 5,
@@ -52,9 +54,10 @@
       "height": 1333,
       "place": "",
       "city": "Madrid",
-      "camera": "FED-2",
-      "capture_type": "analogico",
-      "color_mode": "bn"
+      "zone": "Barajas",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
+      "color_mode": "color"
     },
     {
       "id": 6,
@@ -63,8 +66,9 @@
       "height": 1333,
       "place": "",
       "city": "Madrid",
-      "camera": "Smena-2",
-      "capture_type": "analogico",
+      "zone": "Barajas",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
       "color_mode": "color"
     },
     {
@@ -74,9 +78,10 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
-      "camera": "FED-2",
-      "capture_type": "analogico",
-      "color_mode": "bn"
+      "zone": "Barajas",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
+      "color_mode": "color"
     },
     {
       "id": 8,

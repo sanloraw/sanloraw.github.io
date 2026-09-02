@@ -1036,6 +1036,11 @@ a{color:inherit;text-decoration:none}
                 Madrid
                 <span class="opcion__cuenta">0</span>
               </button>
+              <button class="opcion opcion--zona" data-eje="zona" data-valor="Barajas" data-ciudad="Madrid" aria-pressed="false" hidden>
+                <span class="opcion__codo" aria-hidden="true"></span>
+                Barajas
+                <span class="opcion__cuenta">0</span>
+              </button>
               <button class="opcion" data-eje="ciudad" data-valor="Torres, Jaén" aria-pressed="false">
                 Torres, Jaén
                 <span class="opcion__cuenta">0</span>
@@ -1085,20 +1090,16 @@ a{color:inherit;text-decoration:none}
                 Canon 750D
                 <span class="opcion__cuenta">0</span>
               </button>
-              <button class="opcion" data-eje="camara" data-valor="FED-2" aria-pressed="false">
-                FED-2
-                <span class="opcion__cuenta">0</span>
-              </button>
-              <button class="opcion" data-eje="camara" data-valor="Smena-2" aria-pressed="false">
-                Smena-2
-                <span class="opcion__cuenta">0</span>
-              </button>
               <button class="opcion" data-eje="camara" data-valor="Zorki-6" aria-pressed="false">
                 Zorki-6
                 <span class="opcion__cuenta">0</span>
               </button>
               <button class="opcion" data-eje="camara" data-valor="Sony DSC-W730" aria-pressed="false">
                 Sony DSC-W730
+                <span class="opcion__cuenta">0</span>
+              </button>
+              <button class="opcion" data-eje="camara" data-valor="Smena-2" aria-pressed="false">
+                Smena-2
                 <span class="opcion__cuenta">0</span>
               </button>
               <button class="opcion" data-eje="camara" data-valor="Olympus Superzoom 70S" aria-pressed="false">
@@ -1311,9 +1312,15 @@ a{color:inherit;text-decoration:none}
      Las fotos vienen de filtros.json y los separadores de
      separadores.json. */
   async function construirMosaico(){
+    /* no-cache no es "sin caché": obliga a preguntarle al servidor si el
+       archivo cambió. Si no cambió responde 304 y se reutiliza el que ya
+       había, así que no cuesta descarga. Sin esto el navegador se queda
+       con un filtros.json viejo mientras sirve el index.html nuevo, y la
+       galería sale con los botones de hoy y los datos de anteayer. */
+    const traer = ruta => fetch(ruta, { cache: 'no-cache' }).then(r => r.json());
     const [datosFotos, datosTextos] = await Promise.all([
-      fetch('filtros.json').then(r => r.json()),
-      fetch('separadores.json').then(r => r.json())
+      traer('filtros.json'),
+      traer('separadores.json')
     ]);
     const MIS_FOTOS  = (datosFotos.photos || []).map(normalizarFoto);
     const MIS_TEXTOS = datosTextos.separadores || [];
