@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller · Sanlo.raw</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Karla:wght@300;400;500;700&display=swap">
+<style>
+:root{
+  --washi:#F4EFE6; --tatami:#EDE5D8; --luz:#FBF8F3;
+  --sumi:#3A3632; --ceniza:#6B6259; --niebla:#9A8F82;
+  --roble:#A67C52; --pino:#8C6239; --lino:#D9CFC0;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Karla',-apple-system,BlinkMacSystemFont,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--washi);color:var(--sumi);
+  font-family:var(--sans);font-weight:300;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;display:flex;flex-direction:column;
+}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
+:focus-visible{outline:1px solid var(--roble);outline-offset:3px}
+
+/* ── cabecera ── */
+.barra{
+  display:flex;align-items:baseline;gap:1.5rem;flex-wrap:wrap;
+  padding:1.1rem clamp(1rem,3vw,2rem);
+  border-bottom:1px solid var(--lino);background:var(--luz);
+}
+.marca{font-family:var(--serif);font-size:1.5rem;line-height:1}
+.marca em{font-style:italic;color:var(--roble)}
+.cuentas{display:flex;gap:1.4rem;font-size:.72rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--niebla)}
+.cuentas b{color:var(--sumi);font-weight:500;font-variant-numeric:tabular-nums}
+.modos{margin-left:auto;display:flex;gap:.4rem}
+.modo{
+  font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:.35rem .8rem;border:1px solid var(--lino);border-radius:2px;
+  color:var(--ceniza);
+}
+.modo[aria-pressed="true"]{background:var(--sumi);color:var(--luz);border-color:var(--sumi)}
+
+/* ── avisos ── */
+.aviso{
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  padding:.85rem clamp(1rem,3vw,2rem);
+  background:rgba(166,124,82,.09);border-bottom:1px solid var(--lino);
+  font-size:.88rem;color:var(--ceniza);
+}
+.aviso b{color:var(--sumi);font-weight:500}
+.aviso--error{background:rgba(140,98,57,.14)}
+
+/* ── cuerpo ── */
+.taller{
+  flex:1;display:grid;
+  grid-template-columns:minmax(0,1fr) clamp(300px,30vw,420px);
+  min-height:0;
+}
+@media (max-width:900px){.taller{grid-template-columns:1fr;grid-template-rows:auto auto}}
+
+.escena{
+  display:flex;align-items:center;justify-content:center;
+  padding:clamp(1rem,3vw,2.5rem);min-width:0;min-height:0;
+  background:var(--tatami);
+}
+.escena img{
+  max-width:100%;max-height:calc(100vh - 12rem);
+  width:auto;height:auto;display:block;
+  box-shadow:0 2px 30px rgba(58,54,50,.14);
+}
+@media (max-width:900px){.escena img{max-height:50vh}}
+
+/* ── panel ── */
+.panel{
+  background:var(--luz);border-left:1px solid var(--lino);
+  padding:clamp(1.2rem,2.5vw,1.8rem);
+  overflow-y:auto;display:flex;flex-direction:column;gap:1.35rem;
+}
+@media (max-width:900px){.panel{border-left:none;border-top:1px solid var(--lino)}}
+
+.archivo{font-size:.72rem;letter-spacing:.1em;color:var(--niebla);
+  word-break:break-all;font-variant-numeric:tabular-nums}
+.archivo b{color:var(--ceniza);font-weight:500}
+
+.grupo{display:flex;flex-direction:column;gap:.5rem}
+.grupo__rotulo{
+  font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--niebla);font-weight:500;
+}
+.grupo__rotulo span{text-transform:none;letter-spacing:.02em;color:var(--lino)}
+.fichas{display:flex;flex-wrap:wrap;gap:.4rem}
+.opcion{
+  font-size:.83rem;padding:.34rem .75rem;
+  border:1px solid var(--lino);border-radius:2px;color:var(--ceniza);
+  transition:border-color .18s, color .18s, background .18s;
+}
+.opcion:hover{border-color:var(--roble);color:var(--sumi)}
+.opcion[aria-pressed="true"]{background:var(--sumi);color:var(--luz);border-color:var(--sumi)}
+.opcion--otra{border-style:dashed;color:var(--niebla)}
+
+input[type=text]{
+  font:inherit;font-size:.92rem;color:var(--sumi);
+  background:var(--washi);border:1px solid var(--lino);border-radius:2px;
+  padding:.45rem .7rem;width:100%;
+}
+input[type=text]::placeholder{color:var(--niebla)}
+input[type=text]:focus{outline:none;border-color:var(--roble)}
+
+.acciones{display:flex;gap:.6rem;margin-top:auto;padding-top:.5rem}
+.principal{
+  flex:1;background:var(--sumi);color:var(--luz);
+  padding:.7rem 1rem;border-radius:2px;font-size:.9rem;font-weight:500;
+  transition:background .18s;
+}
+.principal:hover{background:var(--pino)}
+.principal:disabled{opacity:.4;cursor:default}
+.secundaria{
+  padding:.7rem 1rem;border:1px solid var(--lino);border-radius:2px;
+  font-size:.9rem;color:var(--ceniza);
+}
+.secundaria:hover{border-color:var(--roble);color:var(--sumi)}
+
+.pista{font-size:.74rem;color:var(--niebla);line-height:1.5}
+kbd{
+  font-family:var(--sans);font-size:.9em;background:var(--tatami);
+  border:1px solid var(--lino);border-radius:2px;padding:.05em .35em;
+  color:var(--ceniza);
+}
+
+/* ── vacío ── */
+.vacio{
+  grid-column:1 / -1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.8rem;padding:4rem 2rem;text-align:center;
+}
+.vacio h2{font-family:var(--serif);font-weight:400;font-size:2rem;line-height:1.1}
+.vacio p{color:var(--ceniza);max-width:26rem;font-size:.92rem}
+
+/* ── tira de etiquetadas ── */
+.tira{
+  grid-column:1 / -1;padding:clamp(1rem,3vw,2rem);
+  display:grid;gap:.8rem;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+}
+.miniatura{
+  border:1px solid var(--lino);background:var(--luz);border-radius:2px;
+  overflow:hidden;text-align:left;transition:border-color .18s;
+}
+.miniatura:hover{border-color:var(--roble)}
+.miniatura img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.miniatura__pie{padding:.5rem .6rem;font-size:.74rem;color:var(--ceniza)}
+.miniatura__pie b{display:block;color:var(--sumi);font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.miniatura__pie span{color:var(--niebla)}
+</style>
+</head>
+<body>
+
+<header class="barra">
+  <span class="marca">Sanlo<em>.raw</em> · taller</span>
+  <div class="cuentas" id="cuentas"></div>
+  <div class="modos">
+    <button class="modo" id="modo-pendientes" aria-pressed="true">Sin etiquetar</button>
+    <button class="modo" id="modo-todas" aria-pressed="false">Todas</button>
+  </div>
+</header>
+
+<div id="avisos"></div>
+
+<main class="taller" id="taller"></main>
+
+<script>
+const $ = s => document.querySelector(s);
+let D = null;              // datos del servidor
+let cola = [];             // fotos por etiquetar en este momento
+let i = 0;                 // cuál de la cola
+let modo = 'pendientes';
+let borrador = {};
+
+const esc = s => String(s ?? '').replace(/[&<>"]/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function pedir(ruta, cuerpo){
+  const r = await fetch(ruta, cuerpo ? {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(cuerpo)
+  } : undefined);
+  const d = await r.json();
+  if(!r.ok || d.error) throw new Error(d.error || 'error del servidor');
+  return d;
+}
+
+function avisar(html, clase){
+  $('#avisos').innerHTML = html
+    ? `<div class="aviso ${clase||''}">${html}</div>` : '';
+}
+
+async function cargar(){
+  try{
+    D = await pedir('/taller/datos');
+  }catch(e){
+    avisar(`No he podido leer el estado: <b>${esc(e.message)}</b>`, 'aviso--error');
+    return;
+  }
+  pintarCuentas();
+  pintarAvisoImportar();
+  rehacerCola();
+  pintar();
+}
+
+function pintarCuentas(){
+  $('#cuentas').innerHTML =
+    `<span><b>${D.pendientes.length}</b> sin etiquetar</span>` +
+    `<span><b>${D.etiquetadas.length}</b> etiquetadas</span>` +
+    (D.sinConvertir.length ? `<span><b>${D.sinConvertir.length}</b> sin convertir</span>` : '');
+}
+
+function pintarAvisoImportar(){
+  if(!D.magick){
+    avisar('No encuentro <b>ImageMagick</b>, así que no puedo convertir ' +
+           'originales. Lo demás funciona igual.', 'aviso--error');
+    return;
+  }
+  if(D.sinConvertir.length){
+    avisar(`Hay <b>${D.sinConvertir.length}</b> original(es) en ` +
+      `<b>fotos/_originales/</b> sin convertir. ` +
+      `<button class="opcion" id="importar">Convertir a WebP</button>`);
+    $('#importar').onclick = async (ev) => {
+      ev.target.textContent = 'Convirtiendo…';
+      ev.target.disabled = true;
+      try{
+        const r = await pedir('/taller/importar', {});
+        await cargar();
+        if(r.fallos.length){
+          avisar(`No pude con ${r.fallos.length}: ` +
+            r.fallos.map(f => esc(f.archivo)).join(', '), 'aviso--error');
+        }
+      }catch(e){
+        avisar(`Fallo al convertir: <b>${esc(e.message)}</b>`, 'aviso--error');
+      }
+    };
+    return;
+  }
+  avisar('');
+}
+
+function rehacerCola(){
+  cola = modo === 'pendientes'
+    ? D.pendientes.map(p => ({...p, nueva:true}))
+    : D.etiquetadas.map(f => ({...f, nueva:false}));
+  if(i >= cola.length) i = Math.max(0, cola.length - 1);
+}
+
+/* Valores de partida de la foto actual: lo que ya tuviera, o lo que el
+   EXIF sugiere, o lo último que usaste — en ese orden. */
+function partida(foto){
+  const s = foto.sugerencia || {};
+  const camara = foto.camera || s.camera || borrador.camera || '';
+  return {
+    filename: foto.filename,
+    place: foto.place || '',
+    city: foto.city || borrador.city || D.ciudades[0] || 'Madrid',
+    camera: camara,
+    capture_type: foto.capture_type || D.formatoDe[camara] || 'digital',
+    color_mode: foto.color_mode || ''
+  };
+}
+
+let actual = null;
+
+function pintar(){
+  const t = $('#taller');
+  if(modo === 'todas' && cola.length && i === -1){ return pintarTira(); }
+  if(!cola.length){
+    t.innerHTML = `<div class="vacio">
+      <h2>${modo === 'pendientes' ? 'Nada que etiquetar' : 'Todavía no hay fichas'}</h2>
+      <p>${modo === 'pendientes'
+        ? 'Todas las fotografías convertidas tienen ya su ficha en filtros.json. Deja nuevos originales en <b>fotos/_originales/</b> y vuelve aquí.'
+        : 'Etiqueta alguna fotografía y aparecerá en esta lista.'}</p>
+    </div>`;
+    return;
+  }
+
+  const foto = cola[i];
+  actual = partida(foto);
+
+  /* type="button" no es opcional: dentro de un <form>, un <button> sin
+     type es de envío, así que pulsar una etiqueta mandaba el formulario
+     a medio rellenar. */
+  const chips = (lista, campo, extra) => lista.map(v =>
+    `<button type="button" class="opcion" data-campo="${campo}" data-valor="${esc(v)}"
+       aria-pressed="${actual[campo] === v}">${esc(extra ? extra(v) : v)}</button>`
+  ).join('');
+
+  t.innerHTML = `
+    <div class="escena">
+      <img src="/fotos/${encodeURIComponent(foto.filename)}" alt="">
+    </div>
+    <form class="panel" id="panel">
+      <p class="archivo">
+        <b>${esc(foto.filename)}</b><br>
+        ${foto.width}×${foto.height} px · ${i + 1} de ${cola.length}
+        ${foto.sugerencia && foto.sugerencia.date ? ' · ' + esc(foto.sugerencia.date) : ''}
+      </p>
+
+      <div class="grupo">
+        <label class="grupo__rotulo" for="lugar">Lugar <span>— el rótulo sobre la foto</span></label>
+        <input type="text" id="lugar" value="${esc(actual.place)}"
+               placeholder="Gran Vía, la esquina del bar…" autocomplete="off">
+      </div>
+
+      <div class="grupo">
+        <span class="grupo__rotulo">Ciudad</span>
+        <div class="fichas" data-grupo="city">
+          ${chips(D.ciudades, 'city')}
+          <button type="button" class="opcion opcion--otra" data-otra="city">otra…</button>
+        </div>
+      </div>
+
+      <div class="grupo">
+        <span class="grupo__rotulo">Tratamiento</span>
+        <div class="fichas" data-grupo="color_mode">
+          ${chips(['bn','color'], 'color_mode', v => v === 'bn' ? 'Blanco y negro' : 'Color')}
+        </div>
+      </div>
+
+      <div class="grupo">
+        <span class="grupo__rotulo">Cámara</span>
+        <div class="fichas" data-grupo="camera">
+          ${chips(D.camaras, 'camera')}
+          <button type="button" class="opcion opcion--otra" data-otra="camera">otra…</button>
+        </div>
+      </div>
+
+      <div class="grupo">
+        <span class="grupo__rotulo">Formato</span>
+        <div class="fichas" data-grupo="capture_type">
+          ${chips(['digital','analogico'], 'capture_type',
+                  v => v === 'bn' ? v : (v === 'digital' ? 'Digital' : 'Analógico'))}
+        </div>
+      </div>
+
+      <p class="pista" id="pista"></p>
+
+      <div class="acciones">
+        <button type="submit" class="principal" id="guardar">
+          ${foto.nueva ? 'Guardar y siguiente' : 'Guardar cambios'}
+        </button>
+        <button type="button" class="secundaria" id="saltar">Saltar</button>
+      </div>
+      <p class="pista"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> para guardar</p>
+    </form>`;
+
+  $('#panel').addEventListener('click', alPulsar);
+  $('#panel').addEventListener('submit', ev => { ev.preventDefault(); guardar(); });
+  $('#saltar').onclick = () => { i = (i + 1) % cola.length; pintar(); };
+  $('#lugar').oninput = e => { actual.place = e.target.value; };
+  $('#lugar').focus();
+  revisar();
+}
+
+function alPulsar(ev){
+  const otra = ev.target.closest('[data-otra]');
+  if(otra){
+    const campo = otra.dataset.otra;
+    const v = prompt(campo === 'city' ? '¿Qué ciudad?' : '¿Qué cámara?');
+    if(v && v.trim()){
+      const lista = campo === 'city' ? D.ciudades : D.camaras;
+      if(!lista.includes(v.trim())) lista.push(v.trim());
+      actual[campo] = v.trim();
+      if(campo === 'camera') actual.capture_type = D.formatoDe[v.trim()] || actual.capture_type;
+      pintarConservando();
+    }
+    return;
+  }
+  const chip = ev.target.closest('[data-campo]');
+  if(!chip) return;
+  const campo = chip.dataset.campo, valor = chip.dataset.valor;
+  actual[campo] = valor;
+  if(campo === 'camera' && D.formatoDe[valor]) actual.capture_type = D.formatoDe[valor];
+  pintarConservando();
+}
+
+/* Redibuja el panel sin perder lo escrito en Lugar ni la foto actual */
+function pintarConservando(){
+  const guardado = {...actual};
+  pintar();
+  actual = guardado;
+  document.querySelectorAll('[data-campo]').forEach(b => {
+    b.setAttribute('aria-pressed', actual[b.dataset.campo] === b.dataset.valor);
+  });
+  $('#lugar').value = actual.place;
+  revisar();
+}
+
+function revisar(){
+  const falta = [];
+  if(!actual.color_mode) falta.push('el tratamiento');
+  if(!actual.camera) falta.push('la cámara');
+  if(!actual.city) falta.push('la ciudad');
+  $('#guardar').disabled = falta.length > 0;
+  $('#pista').textContent = falta.length
+    ? 'Falta ' + falta.join(', ') + '.'
+    : 'El tamaño y el número de ficha los pone el taller.';
+}
+
+async function guardar(){
+  const b = $('#guardar');
+  const antes = b.textContent;
+  b.disabled = true; b.textContent = 'Guardando…';
+  try{
+    await pedir('/taller/guardar', actual);
+    borrador = {city: actual.city, camera: actual.camera};
+    const eraNueva = cola[i].nueva;
+    await cargar();
+    if(!eraNueva){ b.textContent = antes; }
+  }catch(e){
+    avisar(`No se ha podido guardar: <b>${esc(e.message)}</b>`, 'aviso--error');
+    b.disabled = false; b.textContent = antes;
+  }
+}
+
+function pintarTira(){ /* reservado */ }
+
+$('#modo-pendientes').onclick = () => cambiarModo('pendientes');
+$('#modo-todas').onclick = () => cambiarModo('todas');
+function cambiarModo(m){
+  modo = m; i = 0;
+  $('#modo-pendientes').setAttribute('aria-pressed', m === 'pendientes');
+  $('#modo-todas').setAttribute('aria-pressed', m === 'todas');
+  rehacerCola(); pintar();
+}
+
+document.addEventListener('keydown', ev => {
+  if(ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)){
+    ev.preventDefault();
+    if($('#guardar') && !$('#guardar').disabled) guardar();
+  }
+});
+
+cargar();
+</script>
+</body>
+</html>

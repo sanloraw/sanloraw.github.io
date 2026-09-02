@@ -996,12 +996,15 @@ a{color:inherit;text-decoration:none}
         <div class="grupo__panel" id="p-ciudad">
           <div class="grupo__lista">
             <div class="grupo__interior" role="group" aria-label="Ciudad">
-              <!-- Añade aquí un botón por cada ciudad que uses en filtros.json,
-                   con data-valor igual al campo "city" en minúsculas -->
-              <button class="opcion" data-eje="ciudad" data-valor="madrid" aria-pressed="false">
+              <!-- Lo de aquí dentro lo escribe el taller a partir de
+                   filtros.json. No lo edites a mano: se sobreescribe.
+                   data-valor va tal cual el campo "city", con sus tildes. -->
+              <!-- ciudades:inicio -->
+              <button class="opcion" data-eje="ciudad" data-valor="Madrid" aria-pressed="false">
                 Madrid
-                <span class="opcion__cuenta">7</span>
+                <span class="opcion__cuenta">0</span>
               </button>
+              <!-- ciudades:fin -->
             </div>
           </div>
         </div>
@@ -1038,32 +1041,35 @@ a{color:inherit;text-decoration:none}
         <div class="grupo__panel" id="p-camara">
           <div class="grupo__lista">
             <div class="grupo__interior" role="group" aria-label="Cámaras">
-              <!-- data-valor debe coincidir palabra por palabra con el campo
-                   "camera" de filtros.json -->
-              <button class="opcion" data-eje="camara" data-valor="Canon 750D" aria-pressed="false">
-                Canon 750D
-                <span class="opcion__cuenta">0</span>
-              </button>
+              <!-- Lo de aquí dentro lo escribe el taller a partir de
+                   filtros.json. No lo edites a mano: se sobreescribe.
+                   data-valor va palabra por palabra como el campo "camera". -->
+              <!-- camaras:inicio -->
               <button class="opcion" data-eje="camara" data-valor="Sony DSC-W730" aria-pressed="false">
                 Sony DSC-W730
+                <span class="opcion__cuenta">0</span>
+              </button>
+              <button class="opcion" data-eje="camara" data-valor="Canon 750D" aria-pressed="false">
+                Canon 750D
                 <span class="opcion__cuenta">0</span>
               </button>
               <button class="opcion" data-eje="camara" data-valor="FED-2" aria-pressed="false">
                 FED-2
                 <span class="opcion__cuenta">0</span>
               </button>
-              <button class="opcion" data-eje="camara" data-valor="Zorki-6" aria-pressed="false">
-                Zorki-6
-                <span class="opcion__cuenta">0</span>
-              </button>
               <button class="opcion" data-eje="camara" data-valor="Smena-2" aria-pressed="false">
                 Smena-2
+                <span class="opcion__cuenta">0</span>
+              </button>
+              <button class="opcion" data-eje="camara" data-valor="Zorki-6" aria-pressed="false">
+                Zorki-6
                 <span class="opcion__cuenta">0</span>
               </button>
               <button class="opcion" data-eje="camara" data-valor="Olympus Superzoom 70S" aria-pressed="false">
                 Olympus Superzoom 70S
                 <span class="opcion__cuenta">0</span>
               </button>
+              <!-- camaras:fin -->
             </div>
           </div>
         </div>
@@ -1154,7 +1160,11 @@ a{color:inherit;text-decoration:none}
     return {
       archivo: p.filename,
       lugar:   p.place || '',
-      ciudad:  (p.city || '').toLowerCase(),
+      /* la ciudad viaja tal cual, con sus tildes: el botón del filtro
+         lleva ese mismo texto y se comparan sin traducir nada. Antes se
+         pasaba a minúsculas y había que acordarse de escribirla sin
+         acentos o el filtro no encontraba nada. */
+      ciudad:  p.city || '',
       formato: p.capture_type,
       color:   p.color_mode,
       camara:  p.camera || '',
@@ -1522,11 +1532,11 @@ a{color:inherit;text-decoration:none}
   let indiceActual = 0;
   let ultimoFoco   = null;
 
+  /* Sólo traduce los valores en clave; ciudades y cámaras se escriben
+     ya legibles en filtros.json y se muestran tal cual. */
   const ETIQUETAS = {
     digital:'Digital', analogico:'Analógico',
-    bn:'Blanco y negro', color:'Color',
-    madrid:'Madrid', lisboa:'Lisboa', oporto:'Oporto',
-    tanger:'Tánger', napoles:'Nápoles'
+    bn:'Blanco y negro', color:'Color'
   };
 
   /* Datos de la ficha: un título y una lista de pares rótulo/valor.
@@ -1536,7 +1546,7 @@ a{color:inherit;text-decoration:none}
     const d = foto.dataset;
     const rotulo = foto.querySelector('.tesela__rotulo');
     const lugar  = rotulo ? rotulo.textContent.trim() : '';
-    const ciudad = ETIQUETAS[d.ciudad] || '';
+    const ciudad = d.ciudad || '';
     const filas  = [
       /* si el lugar ya encabeza, la ciudad baja a la lista */
       lugar ? ['Ciudad', ciudad] : null,
