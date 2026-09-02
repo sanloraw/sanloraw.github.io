@@ -205,24 +205,34 @@ def _escapar(v):
              .replace('<', '&lt;').replace('>', '&gt;'))
 
 
-def _bloque(eje, valores, sangria):
-    """valores: cadenas, o pares (valor, {atributo: texto}) para las zonas,
-    que además llevan de qué ciudad cuelgan."""
-    lineas = []
-    for v in valores:
-        extra = ''
-        if isinstance(v, tuple):
-            v, atributos = v
-            extra = ''.join(f' {k}="{_escapar(str(t))}"'
-                            for k, t in atributos.items())
-        escapado = _escapar(v)
-        lineas.append(
-            f'{sangria}<button class="opcion" data-eje="{eje}" '
-            f'data-valor="{escapado}"{extra} aria-pressed="false">')
-        lineas.append(f'{sangria}  {escapado}')
-        lineas.append(f'{sangria}  <span class="opcion__cuenta">0</span>')
-        lineas.append(f'{sangria}</button>')
-    return '\n'.join(lineas)
+def _boton(eje, valor, sangria, clase='', extra='', oculto=False):
+    v = _escapar(valor)
+    codo = (f'\n{sangria}  <span class="opcion__codo" aria-hidden="true"></span>'
+            if 'opcion--zona' in clase else '')
+    return (
+        f'{sangria}<button class="opcion{clase}" data-eje="{eje}" '
+        f'data-valor="{v}"{extra} aria-pressed="false"'
+        f'{" hidden" if oculto else ""}>{codo}\n'
+        f'{sangria}  {v}\n'
+        f'{sangria}  <span class="opcion__cuenta">0</span>\n'
+        f'{sangria}</button>')
+
+
+def _bloque_simple(eje, valores, sangria):
+    return '\n'.join(_boton(eje, v, sangria) for v in valores)
+
+
+def _bloque_ciudades(ciudades, zonas_de, sangria):
+    """Cada ciudad y, sangradas debajo, sus zonas. Nacen ocultas: sólo
+    asoman cuando su ciudad está marcada, y de eso se encarga el JS."""
+    trozos = []
+    for c in ciudades:
+        trozos.append(_boton('ciudad', c, sangria))
+        for z in zonas_de.get(c, []):
+            trozos.append(_boton(
+                'zona', z, sangria, clase=' opcion--zona',
+                extra=f' data-ciudad="{_escapar(c)}"', oculto=True))
+    return '\n'.join(trozos)
 
 
 def regenerar_botones(fichas):
@@ -238,24 +248,24 @@ def regenerar_botones(fichas):
                 vistos.append(v)
         return vistos
 
-    def zonas():
-        """Cada zona con la ciudad de la que cuelga. Se distinguen por el
-        par ciudad+zona: dos ciudades pueden tener un 'Centro' cada una."""
-        vistas, salida = set(), []
+    def zonas_por_ciudad():
+        """Las zonas agrupadas bajo su ciudad, en el orden en que
+        aparecen. Dos ciudades pueden tener un 'Centro' cada una y no se
+        estorban, porque cada una cuelga de la suya."""
+        salida = {}
         for f in fichas:
             z = (f.get('zone') or '').strip()
             c = (f.get('city') or '').strip()
-            if z and (c, z) not in vistas:
-                vistas.add((c, z))
-                salida.append((z, {'data-ciudad': c}))
+            if z and c:
+                salida.setdefault(c, [])
+                if z not in salida[c]:
+                    salida[c].append(z)
         return salida
 
-    listas = {'city': unicos('city'), 'camera': unicos('camera'),
-              'zone': zonas()}
+    ciudades = unicos('city')
+    zonas_de = zonas_por_ciudad()
 
-    for marca, eje, campo in (('ciudades', 'ciudad', 'city'),
-                              ('zonas', 'zona', 'zone'),
-                              ('camaras', 'camara', 'camera')):
+    for marca in ('ciudades', 'camaras'):
         patron = re.compile(
             r'([ \t]*)(<!-- ' + marca + r':inicio -->)(.*?)([ \t]*<!-- '
             + marca + r':fin -->)', re.S)
@@ -264,7 +274,9 @@ def regenerar_botones(fichas):
             raise RuntimeError(
                 f'no encuentro las marcas «{marca}:inicio/fin» en index.html')
         sangria = casacion.group(1)
-        nuevo = _bloque(eje, listas[campo], sangria)
+        nuevo = (_bloque_ciudades(ciudades, zonas_de, sangria)
+                 if marca == 'ciudades'
+                 else _bloque_simple('camara', unicos('camera'), sangria))
         html = (html[:casacion.start()] + sangria + casacion.group(2) + '\n'
                 + nuevo + '\n' + casacion.group(4) + html[casacion.end():])
 
