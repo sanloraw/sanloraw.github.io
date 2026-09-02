@@ -307,6 +307,17 @@
       "camera": "Smena-2",
       "capture_type": "analogico",
       "color_mode": "bn"
+    },
+    {
+      "id": 29,
+      "filename": "DSC07370.webp",
+      "width": 2000,
+      "height": 1500,
+      "place": "",
+      "city": "Torres, Jaén",
+      "camera": "Sony DSC-W730",
+      "capture_type": "digital",
+      "color_mode": "color"
     }
   ]
 }
