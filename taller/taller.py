@@ -60,13 +60,21 @@ MAGICK = _magick()
 
 
 def convertir(origen, destino):
-    """Original → WebP con el lado mayor a 2000. El '>' sólo encoge."""
+    """Original → WebP con el lado mayor a 2000. El '>' sólo encoge.
+
+    -auto-orient no es opcional. Muchas cámaras guardan la foto siempre
+    en horizontal y añaden una etiqueta EXIF diciendo cuánto hay que
+    girarla; sin esto los pixeles salen tal cual y la vertical se publica
+    tumbada. Va antes del -resize para que el lado mayor se mida sobre la
+    imagen ya derecha.
+    """
     if not MAGICK:
         raise RuntimeError(
             'No encuentro ImageMagick. Instálalo desde imagemagick.org '
             'y vuelve a abrir la terminal.')
     subprocess.run(
-        [MAGICK, origen, '-resize', f'{LADO_MAYOR}x{LADO_MAYOR}>',
+        [MAGICK, origen, '-auto-orient',
+         '-resize', f'{LADO_MAYOR}x{LADO_MAYOR}>',
          '-quality', str(CALIDAD), destino],
         check=True, capture_output=True)
 
