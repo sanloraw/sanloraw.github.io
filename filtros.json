@@ -149,9 +149,10 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
-      "camera": "Zorki-6",
-      "capture_type": "analogico",
-      "color_mode": "bn"
+      "zone": "Garganta de los Montes",
+      "camera": "Sony DSC-W730",
+      "capture_type": "digital",
+      "color_mode": "color"
     },
     {
       "id": 14,
@@ -160,9 +161,9 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
-      "camera": "Smena-2",
-      "capture_type": "analogico",
-      "color_mode": "bn"
+      "camera": "Sony DSC-W730",
+      "capture_type": "digital",
+      "color_mode": "color"
     },
     {
       "id": 15,
@@ -171,7 +172,7 @@
       "height": 1500,
       "place": "",
       "city": "Madrid",
-      "camera": "Canon 750D",
+      "camera": "Sony DSC-W730",
       "capture_type": "digital",
       "color_mode": "color"
     },
@@ -182,8 +183,8 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
-      "camera": "Zorki-6",
-      "capture_type": "analogico",
+      "camera": "Sony DSC-W730",
+      "capture_type": "digital",
       "color_mode": "color"
     },
     {
@@ -193,8 +194,8 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
-      "camera": "Olympus Superzoom 70S",
-      "capture_type": "analogico",
+      "camera": "Sony DSC-W730",
+      "capture_type": "digital",
       "color_mode": "color"
     },
     {
@@ -204,9 +205,9 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
-      "camera": "Canon 750D",
+      "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "bn"
+      "color_mode": "color"
     },
     {
       "id": 19,
@@ -215,7 +216,8 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
-      "camera": "Sony DSC-W730",
+      "zone": "Barajas",
+      "camera": "Canon 750D",
       "capture_type": "digital",
       "color_mode": "color"
     },
@@ -226,6 +228,7 @@
       "height": 1333,
       "place": "",
       "city": "Madrid",
+      "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
       "color_mode": "color"
@@ -237,9 +240,10 @@
       "height": 1333,
       "place": "",
       "city": "Madrid",
-      "camera": "Olympus Superzoom 70S",
-      "capture_type": "analogico",
-      "color_mode": "bn"
+      "zone": "Barajas",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
+      "color_mode": "color"
     },
     {
       "id": 22,
@@ -248,9 +252,10 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
+      "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "bn"
+      "color_mode": "color"
     },
     {
       "id": 23,
@@ -259,8 +264,9 @@
       "height": 1333,
       "place": "",
       "city": "Madrid",
-      "camera": "Zorki-6",
-      "capture_type": "analogico",
+      "zone": "Barajas",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
       "color_mode": "color"
     },
     {
@@ -270,8 +276,9 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
-      "camera": "Zorki-6",
-      "capture_type": "analogico",
+      "zone": "Barajas",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
       "color_mode": "color"
     },
     {
@@ -280,10 +287,10 @@
       "width": 1333,
       "height": 2000,
       "place": "",
-      "city": "Madrid",
-      "camera": "Sony DSC-W730",
+      "city": "Valencia",
+      "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "bn"
+      "color_mode": "color"
     },
     {
       "id": 26,
@@ -291,10 +298,10 @@
       "width": 2000,
       "height": 1333,
       "place": "",
-      "city": "Madrid",
-      "camera": "Olympus Superzoom 70S",
-      "capture_type": "analogico",
-      "color_mode": "bn"
+      "city": "Valencia",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
+      "color_mode": "color"
     },
     {
       "id": 27,
@@ -302,9 +309,9 @@
       "width": 1333,
       "height": 2000,
       "place": "",
-      "city": "Madrid",
-      "camera": "Zorki-6",
-      "capture_type": "analogico",
+      "city": "Valencia",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
       "color_mode": "color"
     },
     {
@@ -313,10 +320,10 @@
       "width": 2000,
       "height": 1333,
       "place": "",
-      "city": "Madrid",
-      "camera": "Smena-2",
-      "capture_type": "analogico",
-      "color_mode": "bn"
+      "city": "Valencia",
+      "camera": "Canon 750D",
+      "capture_type": "digital",
+      "color_mode": "color"
     },
     {
       "id": 29,
@@ -324,7 +331,8 @@
       "width": 1500,
       "height": 2000,
       "place": "",
-      "city": "Torres, Jaén",
+      "city": "Jaén",
+      "zone": "Torres",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
       "color_mode": "color"
