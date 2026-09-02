@@ -365,7 +365,7 @@ function pintar(){
 
       <div class="acciones">
         <button type="submit" class="principal" id="guardar">
-          ${foto.nueva ? 'Guardar y siguiente' : 'Guardar cambios'}
+          Guardar y siguiente
         </button>
         <button type="button" class="secundaria" id="saltar">Saltar</button>
       </div>
@@ -448,8 +448,11 @@ async function guardar(){
     borrador = {city: actual.city, camera: actual.camera, zone: actual.zone};
     const eraNueva = cola[i].nueva;
     actual = null;          // lo guardado manda: se relee del disco
+    /* Las nuevas se van solas de la cola al quedar etiquetadas. Repasando
+       las de siempre no, así que hay que avanzar a mano: si no, repasar
+       toda la galería serían dos pulsaciones por fotografía. */
+    if(!eraNueva && cola.length > 1) i = (i + 1) % cola.length;
     await cargar();
-    if(!eraNueva){ b.textContent = antes; }
   }catch(e){
     avisar(`No se ha podido guardar: <b>${esc(e.message)}</b>`, 'aviso--error');
     b.disabled = false; b.textContent = antes;

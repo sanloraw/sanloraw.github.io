@@ -384,11 +384,18 @@ def guardar_ficha(entrada):
         'height': alto,
         'place': (entrada.get('place') or '').strip(),
         'city': (entrada.get('city') or '').strip(),
-        'zone': (entrada.get('zone') or '').strip(),
         'camera': (entrada.get('camera') or '').strip(),
         'capture_type': entrada.get('capture_type') or 'digital',
         'color_mode': entrada.get('color_mode') or 'color',
     })
+    # La zona es opcional: si no la hay, no se escribe el campo. Así
+    # repasar la galería entera no deja 29 fichas con un "zone" vacío.
+    zona = (entrada.get('zone') or '').strip()
+    if zona:
+        ficha['zone'] = zona
+    else:
+        ficha.pop('zone', None)
+
     if not existente:
         ficha['id'] = max([f.get('id', 0) for f in fichas], default=0) + 1
         fichas.append(ficha)
