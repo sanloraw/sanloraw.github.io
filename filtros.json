@@ -90,7 +90,8 @@
       "height": 1500,
       "place": "",
       "city": "Madrid",
-      "camera": "Canon 750D",
+      "zone": "Barajas",
+      "camera": "Sony DSC-W730",
       "capture_type": "digital",
       "color_mode": "color"
     },
@@ -101,8 +102,9 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
-      "camera": "Zorki-6",
-      "capture_type": "analogico",
+      "zone": "Barajas",
+      "camera": "Sony DSC-W730",
+      "capture_type": "digital",
       "color_mode": "color"
     },
     {
@@ -112,6 +114,7 @@
       "height": 1500,
       "place": "",
       "city": "Madrid",
+      "zone": "Barajas",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
       "color_mode": "color"
@@ -125,7 +128,7 @@
       "city": "Madrid",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "bn"
+      "color_mode": "color"
     },
     {
       "id": 12,
@@ -134,9 +137,10 @@
       "height": 2000,
       "place": "",
       "city": "Madrid",
-      "camera": "Zorki-6",
-      "capture_type": "analogico",
-      "color_mode": "bn"
+      "zone": "Vallekas",
+      "camera": "Sony DSC-W730",
+      "capture_type": "digital",
+      "color_mode": "color"
     },
     {
       "id": 13,
