@@ -260,10 +260,13 @@ function rehacerCola(){
 function partida(foto){
   const s = foto.sugerencia || {};
   const camara = foto.camera || s.camera || borrador.camera || '';
+  const ciudad = foto.city || borrador.city || D.ciudades[0] || 'Madrid';
   return {
     filename: foto.filename,
     place: foto.place || '',
-    city: foto.city || borrador.city || D.ciudades[0] || 'Madrid',
+    city: ciudad,
+    /* la zona sólo se hereda si la ciudad es la misma que la anterior */
+    zone: foto.zone || (borrador.city === ciudad ? borrador.zone : '') || '',
     camera: camara,
     capture_type: foto.capture_type || D.formatoDe[camara] || 'digital',
     color_mode: foto.color_mode || ''
@@ -286,7 +289,12 @@ function pintar(){
   }
 
   const foto = cola[i];
-  actual = partida(foto);
+  /* Si seguimos con la misma fotografía, se conserva lo que llevas
+     elegido sin guardar; sólo al cambiar de foto se parte de su ficha.
+     Sin esto, redibujar el panel tras pulsar una etiqueta reconstruía
+     las demás desde el disco y, al cambiar de ciudad, seguía ofreciendo
+     las zonas de la anterior. */
+  if(!actual || actual.filename !== foto.filename) actual = partida(foto);
 
   /* type="button" no es opcional: dentro de un <form>, un <button> sin
      type es de envío, así que pulsar una etiqueta mandaba el formulario
@@ -318,6 +326,15 @@ function pintar(){
         <div class="fichas" data-grupo="city">
           ${chips(D.ciudades, 'city')}
           <button type="button" class="opcion opcion--otra" data-otra="city">otra…</button>
+        </div>
+      </div>
+
+      <div class="grupo">
+        <span class="grupo__rotulo">Zona <span>— dentro de ${esc(actual.city)}, opcional</span></span>
+        <div class="fichas" data-grupo="zone">
+          ${chips(D.zonasDe[actual.city] || [], 'zone')}
+          <button type="button" class="opcion opcion--otra" data-otra="zone">otra…</button>
+          ${actual.zone ? '<button type="button" class="opcion opcion--otra" data-limpiar="zone">sin zona</button>' : ''}
         </div>
       </div>
 
@@ -357,22 +374,35 @@ function pintar(){
 
   $('#panel').addEventListener('click', alPulsar);
   $('#panel').addEventListener('submit', ev => { ev.preventDefault(); guardar(); });
-  $('#saltar').onclick = () => { i = (i + 1) % cola.length; pintar(); };
+  $('#saltar').onclick = () => { i = (i + 1) % cola.length; actual = null; pintar(); };
   $('#lugar').oninput = e => { actual.place = e.target.value; };
   $('#lugar').focus();
   revisar();
 }
 
+const PREGUNTA = {city:'¿Qué ciudad?', camera:'¿Qué cámara?',
+                  zone:'¿Qué zona? (barrio, distrito, lo que te sirva)'};
+
 function alPulsar(ev){
+  const limpia = ev.target.closest('[data-limpiar]');
+  if(limpia){ actual[limpia.dataset.limpiar] = ''; pintarConservando(); return; }
+
   const otra = ev.target.closest('[data-otra]');
   if(otra){
     const campo = otra.dataset.otra;
-    const v = prompt(campo === 'city' ? '¿Qué ciudad?' : '¿Qué cámara?');
+    const v = prompt(PREGUNTA[campo]);
     if(v && v.trim()){
-      const lista = campo === 'city' ? D.ciudades : D.camaras;
-      if(!lista.includes(v.trim())) lista.push(v.trim());
-      actual[campo] = v.trim();
-      if(campo === 'camera') actual.capture_type = D.formatoDe[v.trim()] || actual.capture_type;
+      const nuevo = v.trim();
+      if(campo === 'zone'){
+        /* las zonas se guardan colgando de su ciudad */
+        (D.zonasDe[actual.city] = D.zonasDe[actual.city] || []);
+        if(!D.zonasDe[actual.city].includes(nuevo)) D.zonasDe[actual.city].push(nuevo);
+      } else {
+        const lista = campo === 'city' ? D.ciudades : D.camaras;
+        if(!lista.includes(nuevo)) lista.push(nuevo);
+      }
+      actual[campo] = nuevo;
+      if(campo === 'camera') actual.capture_type = D.formatoDe[nuevo] || actual.capture_type;
       pintarConservando();
     }
     return;
@@ -380,21 +410,22 @@ function alPulsar(ev){
   const chip = ev.target.closest('[data-campo]');
   if(!chip) return;
   const campo = chip.dataset.campo, valor = chip.dataset.valor;
-  actual[campo] = valor;
+  /* volver a pulsar la zona marcada la quita: es opcional */
+  actual[campo] = (campo === 'zone' && actual.zone === valor) ? '' : valor;
   if(campo === 'camera' && D.formatoDe[valor]) actual.capture_type = D.formatoDe[valor];
+  /* al cambiar de ciudad, la zona de la anterior ya no vale */
+  if(campo === 'city') actual.zone = '';
   pintarConservando();
 }
 
-/* Redibuja el panel sin perder lo escrito en Lugar ni la foto actual */
+/* Redibuja el panel a partir de lo que llevas elegido. pintar() ya
+   respeta `actual` mientras sea la misma foto, así que basta con volver
+   a dibujar y devolver el cursor al final de Lugar. */
 function pintarConservando(){
-  const guardado = {...actual};
   pintar();
-  actual = guardado;
-  document.querySelectorAll('[data-campo]').forEach(b => {
-    b.setAttribute('aria-pressed', actual[b.dataset.campo] === b.dataset.valor);
-  });
-  $('#lugar').value = actual.place;
-  revisar();
+  const lugar = $('#lugar');
+  lugar.focus();
+  lugar.setSelectionRange(lugar.value.length, lugar.value.length);
 }
 
 function revisar(){
@@ -414,8 +445,9 @@ async function guardar(){
   b.disabled = true; b.textContent = 'Guardando…';
   try{
     await pedir('/taller/guardar', actual);
-    borrador = {city: actual.city, camera: actual.camera};
+    borrador = {city: actual.city, camera: actual.camera, zone: actual.zone};
     const eraNueva = cola[i].nueva;
+    actual = null;          // lo guardado manda: se relee del disco
     await cargar();
     if(!eraNueva){ b.textContent = antes; }
   }catch(e){
@@ -429,7 +461,7 @@ function pintarTira(){ /* reservado */ }
 $('#modo-pendientes').onclick = () => cambiarModo('pendientes');
 $('#modo-todas').onclick = () => cambiarModo('todas');
 function cambiarModo(m){
-  modo = m; i = 0;
+  modo = m; i = 0; actual = null;
   $('#modo-pendientes').setAttribute('aria-pressed', m === 'pendientes');
   $('#modo-todas').setAttribute('aria-pressed', m === 'todas');
   rehacerCola(); pintar();

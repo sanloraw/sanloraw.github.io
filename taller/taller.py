@@ -183,7 +183,7 @@ def escribir_fichas(fichas):
     os.replace(tmp, FILTROS)
 
 
-ORDEN = ['id', 'filename', 'width', 'height', 'place', 'city',
+ORDEN = ['id', 'filename', 'width', 'height', 'place', 'city', 'zone',
          'camera', 'capture_type', 'color_mode']
 
 
@@ -200,14 +200,25 @@ def ordenar(ficha):
 #  Botones de filtro en index.html
 # ─────────────────────────────────────────────────────────────────────
 
+def _escapar(v):
+    return (v.replace('&', '&amp;').replace('"', '&quot;')
+             .replace('<', '&lt;').replace('>', '&gt;'))
+
+
 def _bloque(eje, valores, sangria):
+    """valores: cadenas, o pares (valor, {atributo: texto}) para las zonas,
+    que además llevan de qué ciudad cuelgan."""
     lineas = []
     for v in valores:
-        escapado = (v.replace('&', '&amp;').replace('"', '&quot;')
-                     .replace('<', '&lt;').replace('>', '&gt;'))
+        extra = ''
+        if isinstance(v, tuple):
+            v, atributos = v
+            extra = ''.join(f' {k}="{_escapar(str(t))}"'
+                            for k, t in atributos.items())
+        escapado = _escapar(v)
         lineas.append(
             f'{sangria}<button class="opcion" data-eje="{eje}" '
-            f'data-valor="{escapado}" aria-pressed="false">')
+            f'data-valor="{escapado}"{extra} aria-pressed="false">')
         lineas.append(f'{sangria}  {escapado}')
         lineas.append(f'{sangria}  <span class="opcion__cuenta">0</span>')
         lineas.append(f'{sangria}</button>')
@@ -227,7 +238,23 @@ def regenerar_botones(fichas):
                 vistos.append(v)
         return vistos
 
+    def zonas():
+        """Cada zona con la ciudad de la que cuelga. Se distinguen por el
+        par ciudad+zona: dos ciudades pueden tener un 'Centro' cada una."""
+        vistas, salida = set(), []
+        for f in fichas:
+            z = (f.get('zone') or '').strip()
+            c = (f.get('city') or '').strip()
+            if z and (c, z) not in vistas:
+                vistas.add((c, z))
+                salida.append((z, {'data-ciudad': c}))
+        return salida
+
+    listas = {'city': unicos('city'), 'camera': unicos('camera'),
+              'zone': zonas()}
+
     for marca, eje, campo in (('ciudades', 'ciudad', 'city'),
+                              ('zonas', 'zona', 'zone'),
                               ('camaras', 'camara', 'camera')):
         patron = re.compile(
             r'([ \t]*)(<!-- ' + marca + r':inicio -->)(.*?)([ \t]*<!-- '
@@ -237,7 +264,7 @@ def regenerar_botones(fichas):
             raise RuntimeError(
                 f'no encuentro las marcas «{marca}:inicio/fin» en index.html')
         sangria = casacion.group(1)
-        nuevo = _bloque(eje, unicos(campo), sangria)
+        nuevo = _bloque(eje, listas[campo], sangria)
         html = (html[:casacion.start()] + sangria + casacion.group(2) + '\n'
                 + nuevo + '\n' + casacion.group(4) + html[casacion.end():])
 
@@ -288,6 +315,7 @@ def estado():
         })
 
     ciudades, camaras, formato_de = [], [], {}
+    zonas_de = {}          # ciudad -> [zonas ya usadas en ella]
     for f in fichas:
         c = (f.get('city') or '').strip()
         if c and c not in ciudades:
@@ -297,6 +325,11 @@ def estado():
             camaras.append(m)
         if m and f.get('capture_type'):
             formato_de[m] = f['capture_type']
+        z = (f.get('zone') or '').strip()
+        if c and z:
+            zonas_de.setdefault(c, [])
+            if z not in zonas_de[c]:
+                zonas_de[c].append(z)
 
     return {
         'pendientes': pendientes,
@@ -305,6 +338,7 @@ def estado():
         'ciudades': ciudades,
         'camaras': camaras,
         'formatoDe': formato_de,
+        'zonasDe': zonas_de,
         'magick': bool(MAGICK),
     }
 
@@ -350,6 +384,7 @@ def guardar_ficha(entrada):
         'height': alto,
         'place': (entrada.get('place') or '').strip(),
         'city': (entrada.get('city') or '').strip(),
+        'zone': (entrada.get('zone') or '').strip(),
         'camera': (entrada.get('camera') or '').strip(),
         'capture_type': entrada.get('capture_type') or 'digital',
         'color_mode': entrada.get('color_mode') or 'color',
