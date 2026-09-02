@@ -18,10 +18,11 @@
       "width": 2000,
       "height": 1333,
       "place": "",
-      "city": "Madrid",
+      "city": "Castellón",
+      "zone": "El Tormo",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "bn"
+      "color_mode": "color"
     },
     {
       "id": 3,
