@@ -235,8 +235,14 @@ def _bloque_ciudades(ciudades, zonas_de, sangria):
     return '\n'.join(trozos)
 
 
-def regenerar_botones(fichas):
-    """Reescribe lo que hay entre las marcas. Fuera de ellas no toca nada."""
+def html_regenerado(fichas):
+    """Devuelve index.html con los botones al día, sin escribir nada.
+
+    Se separa del guardado a propósito: si faltan las marcas, esto
+    revienta antes de que se haya tocado ningún archivo. Antes se
+    escribía filtros.json primero y el fallo llegaba después, así que la
+    ficha quedaba guardada mientras la página anunciaba que no.
+    """
     with open(INDEX, encoding='utf-8') as fh:
         html = fh.read()
 
@@ -280,10 +286,19 @@ def regenerar_botones(fichas):
         html = (html[:casacion.start()] + sangria + casacion.group(2) + '\n'
                 + nuevo + '\n' + casacion.group(4) + html[casacion.end():])
 
+    return html
+
+
+def escribir_index(html):
     tmp = INDEX + '.tmp'
     with open(tmp, 'w', encoding='utf-8', newline='\n') as fh:
         fh.write(html)
     os.replace(tmp, INDEX)
+
+
+def regenerar_botones(fichas):
+    """Reescribe lo que hay entre las marcas. Fuera de ellas no toca nada."""
+    escribir_index(html_regenerado(fichas))
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -415,16 +430,21 @@ def guardar_ficha(entrada):
         fichas[fichas.index(existente)] = ficha
 
     fichas = [ordenar(f) for f in fichas]
+    # Primero se prepara el HTML, que es lo único que puede fallar aquí;
+    # sólo si sale bien se escribe. Al revés, un fallo dejaba la ficha ya
+    # guardada mientras la página decía que no se había podido guardar.
+    html = html_regenerado(fichas)
     escribir_fichas(fichas)
-    regenerar_botones(fichas)
+    escribir_index(html)
     return ficha
 
 
 def borrar_ficha(nombre):
     fichas = [f for f in leer_fichas() if f['filename'] != nombre]
     fichas = [ordenar(f) for f in fichas]
+    html = html_regenerado(fichas)
     escribir_fichas(fichas)
-    regenerar_botones(fichas)
+    escribir_index(html)
 
 
 # ─────────────────────────────────────────────────────────────────────
