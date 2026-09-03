@@ -237,10 +237,10 @@ FACTOR_RECORTE = {
 }
 
 # Las compactas llevan la lente soldada y no la apuntan en el EXIF, así
-# que si no está aquí no sale nada. El dato es el del fabricante; cámbialo
-# si prefieres otra forma de decirlo.
+# que si no está aquí no sale nada. Se escriben como vienen grabadas en el
+# barrilete, igual que se nombran los objetivos intercambiables.
 OBJETIVO_FIJO = {
-    'Sony DSC-W730': 'Zoom 25-224 mm equiv.',
+    'Sony DSC-W730': 'Carl Zeiss Vario-Tessar 4,5-36 mm',
 }
 
 # Lo que sobra del nombre que graba la cámara: estabilizadores, motores y
