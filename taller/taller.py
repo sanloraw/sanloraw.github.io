@@ -236,6 +236,30 @@ FACTOR_RECORTE = {
     'Olympus Superzoom 70S': 1.0,
 }
 
+# Las compactas llevan la lente soldada y no la apuntan en el EXIF, así
+# que si no está aquí no sale nada. El dato es el del fabricante; cámbialo
+# si prefieres otra forma de decirlo.
+OBJETIVO_FIJO = {
+    'Sony DSC-W730': 'Zoom 25-224 mm equiv.',
+}
+
+# Lo que sobra del nombre que graba la cámara: estabilizadores, motores y
+# revisiones. "EF-S18-135mm f/3.5-5.6 IS STM" cabe en "EF-S 18-135 mm".
+_RUIDO_OBJETIVO = re.compile(
+    r'\s*(?:f/?[\d.]+(?:-[\d.]+)?|IS|STM|USM|DO|II|III|EX|DG|DN|HSM|ASPH|'
+    r'Macro|Nano|OSS|VR|GM|PZ|Art|Contemporary|Sports|G|L)\b', re.I)
+
+
+def objetivo_corto(nombre):
+    """'EF-S18-135mm f/3.5-5.6 IS STM' → 'EF-S 18-135 mm'."""
+    if not nombre:
+        return ''
+    v = _RUIDO_OBJETIVO.sub('', nombre)
+    # separa la montura de la focal y despega el "mm": EF-S18-135mm
+    v = re.sub(r'(?<=[A-Za-z])(?=\d)', ' ', v)
+    v = re.sub(r'(\d)\s*mm', r'\1 mm', v, flags=re.I)
+    return re.sub(r'\s{2,}', ' ', v).strip(' -')
+
 
 def focal_equivalente(focal_real, camara):
     """Focal en equivalente de 35 mm, redondeada. None si no sé el factor."""
@@ -501,10 +525,16 @@ def datos_tecnicos(nombre_webp, camara):
     e = exif(os.path.join(ORIGINALES, original))
     salida = {}
     for clave, campo in (('apertura', 'aperture'), ('velocidad', 'shutter'),
-                         ('iso', 'iso'), ('objetivo', 'lens'),
-                         ('anio', 'year')):
+                         ('iso', 'iso'), ('anio', 'year')):
         if e.get(clave):
             salida[campo] = e[clave]
+
+    # El nombre que graba la cámara trae más de lo que cabe en la cartela;
+    # y las compactas no lo graban, así que ahí tira de tabla.
+    objetivo = objetivo_corto(e.get('objetivo')) or OBJETIVO_FIJO.get(camara, '')
+    if objetivo:
+        salida['lens'] = objetivo
+
     eq = focal_equivalente(e.get('focal'), camara)
     if eq:
         salida['focal_35'] = eq

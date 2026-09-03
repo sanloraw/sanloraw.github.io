@@ -701,11 +701,11 @@ a{color:inherit;text-decoration:none}
 .ficha__titulo:empty{display:none}
 
 /* Los ajustes del disparo, cantados juntos como se dicen de viva voz.
-   En serif, para que pesen más que las filas de datos de abajo. */
+   Misma letra y mismo cuerpo que los valores de las filas: es un dato
+   más, no un titular, y en serif se despegaba del resto de la cartela. */
 .ficha__exposicion{
-  font-family:var(--serif);
-  font-size:clamp(1rem,.9rem + .35vw,1.25rem);
-  line-height:1.3;letter-spacing:.02em;
+  font-size:.82rem;
+  line-height:1.5;letter-spacing:.02em;
   color:var(--sumi);
   font-variant-numeric:tabular-nums;
 }
