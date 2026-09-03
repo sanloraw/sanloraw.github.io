@@ -1410,8 +1410,22 @@ a{color:inherit;text-decoration:none}
     ];
     colsEl.forEach(c => c.innerHTML = '');
 
-    /* fotos repartidas entre las tres columnas, equilibrando el alto */
-    const porColumna = repartirFotos(MIS_FOTOS, 3)
+    /* La portada no lo enseña todo: sale una selección, distinta en cada
+       visita. Con el archivo creciendo, verlo entero de una vez deja de
+       ser una portada y pasa a ser un inventario.
+
+       Las que no entran se construyen igual y se quedan escondidas en las
+       columnas: así los filtros siguen alcanzando el archivo completo, y
+       como las imágenes son perezosas, una foto escondida no se descarga.
+       El tope se pone en separadores.json; a cero, salen todas. */
+    const tope = ajustes.enPortada > 0
+      ? Math.min(ajustes.enPortada, MIS_FOTOS.length)
+      : MIS_FOTOS.length;
+    const seleccion = MIS_FOTOS.slice(0, tope);
+    const resto     = MIS_FOTOS.slice(tope);
+
+    /* el reparto equilibra el alto de lo que se ve, no del archivo */
+    const porColumna = repartirFotos(seleccion, 3)
       .map(lista => lista.map((f, i) => crearFoto(f, i === 0)));
 
     /* Los separadores son eso: separan. Van siempre en un hueco entre dos
@@ -1425,7 +1439,7 @@ a{color:inherit;text-decoration:none}
        barajan, así que en cada carga sale un subconjunto distinto. */
     const objetivo = Math.min(
       MIS_TEXTOS.length,
-      Math.round(MIS_FOTOS.length / fotosPorSeparador)
+      Math.round(seleccion.length / fotosPorSeparador)
     );
     const reserva = barajar(MIS_TEXTOS);
     let puestos = 0;
@@ -1442,6 +1456,16 @@ a{color:inherit;text-decoration:none}
       }
       if(!algunoEnEstaVuelta) break;   // ninguna columna tiene ya sitio
     }
+
+    /* Las que no entran en la portada se reparten también, marcadas para
+       quedarse escondidas mientras no haya filtros. Van antes del
+       separador de cierre para no robarle el ser el último de la columna,
+       que es de lo que depende que se estire. */
+    resto.forEach((f, n) => {
+      const el = crearFoto(f, false);
+      el.dataset.fueraDePortada = '1';
+      porColumna[n % porColumna.length].push(el);
+    });
 
     /* Cada columna cierra con un separador. Además de rematarla, es la
        pieza que se estira (ver el CSS) para rellenar el hueco cuando la
@@ -1537,7 +1561,7 @@ a{color:inherit;text-decoration:none}
 
   function recalcularVisibles(){
     visibles = fotos
-      .filter(f => encaja(f))
+      .filter(f => seVe(f))
       .sort((a, b) => ordenGlobal(a) - ordenGlobal(b));
     visibles.forEach((foto, i) => { foto.dataset.indiceVisor = i; });
   }
@@ -1563,6 +1587,13 @@ a{color:inherit;text-decoration:none}
     return estado.formato !== null || estado.trato !== null
         || estado.ciudad.size > 0  || estado.camara.size > 0
         || estado.zona.size > 0;
+  }
+
+  /* Qué se ve en cada momento. Sin filtros manda la selección de portada;
+     en cuanto filtras, el tope desaparece y se busca en todo el archivo,
+     que es justo para lo que están los filtros. */
+  function seVe(foto){
+    return hayFiltros() ? encaja(foto) : foto.dataset.fueraDePortada !== '1';
   }
 
   function encaja(foto){
@@ -1600,7 +1631,7 @@ a{color:inherit;text-decoration:none}
     recalcularVisibles();
     if(activos) apilarEnColumna();
 
-    fotos.forEach(foto => { foto.hidden = !encaja(foto); });
+    fotos.forEach(foto => { foto.hidden = !seVe(foto); });
     limpiar.classList.toggle('activo', activos);
     mosaico.classList.toggle('filtrando', activos);
     document.querySelector('.cuerpo').classList.toggle('filtrando', activos);
@@ -1823,9 +1854,11 @@ a{color:inherit;text-decoration:none}
   }, { passive:true });
 
   actualizarCuentas();
-  ajustarZonas();      // al arrancar no hay ciudad: la zona nace apagada
-  recalcularVisibles();
-  anunciar();
+  /* Una pasada completa al arrancar, no sólo el recuento: es la que apaga
+     la zona —al no haber ciudad— y la que esconde lo que no entra en la
+     portada. Antes sólo se hacía al tocar un filtro, así que la primera
+     carga salía con el archivo entero. */
+  aplicar();
 })();
 </script>
 
