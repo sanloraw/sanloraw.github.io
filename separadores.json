@@ -1,7 +1,7 @@
 {
   "ajustes": {
     "fotosPorSeparador": 3,
-    "enPortada": 15
+    "enPortada": 18
   },
   "separadores": [
     { "tipo": "concepto", "kanji": "間", "nombre": "Ma · el intervalo", "fondo": "pino" },
