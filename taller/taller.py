@@ -112,6 +112,11 @@ def _medir_webp(ruta):
 #  EXIF — sólo lo que hace falta, sin dependencias
 # ─────────────────────────────────────────────────────────────────────
 
+def _coma(numero):
+    """Decimales con coma, como manda el español: 5.6 → 5,6."""
+    return str(numero).replace('.', ',')
+
+
 def exif(ruta):
     """Lo que el original sepa contar de su propio disparo. Nunca falla:
     lo que no esté, no sale.
@@ -191,8 +196,9 @@ def exif(ruta):
             f = racional(0x829D, sub)          # FNumber
             if f:
                 v = f[0] / f[1]
-                # f/5.6 y no f/5.60; f/8 y no f/8.0
-                datos['apertura'] = 'f/' + (f'{v:.1f}'.rstrip('0').rstrip('.'))
+                # f/5,6 y no f/5,60; f/8 y no f/8,0. Coma decimal, que es
+                # como se escribe en el resto de la cartela.
+                datos['apertura'] = 'f/' + _coma(f'{v:.1f}'.rstrip('0').rstrip('.'))
 
             v = racional(0x829A, sub)          # ExposureTime
             if v:
@@ -200,7 +206,7 @@ def exif(ruta):
                 if num and den / num >= 1:
                     datos['velocidad'] = f'1/{round(den / num)} s'
                 elif num:
-                    datos['velocidad'] = (f'{num / den:g} s')
+                    datos['velocidad'] = _coma(f'{num / den:g}') + ' s'
 
             iso = entero(0x8827, sub)
             if iso:
