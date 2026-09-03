@@ -700,6 +700,30 @@ a{color:inherit;text-decoration:none}
 }
 .ficha__titulo:empty{display:none}
 
+/* Los ajustes del disparo, cantados juntos como se dicen de viva voz.
+   En serif, para que pesen más que las filas de datos de abajo. */
+.ficha__exposicion{
+  font-family:var(--serif);
+  font-size:clamp(1rem,.9rem + .35vw,1.25rem);
+  line-height:1.3;letter-spacing:.02em;
+  color:var(--sumi);
+  font-variant-numeric:tabular-nums;
+}
+.ficha__exposicion:empty{display:none}
+
+/* La focal, un escalón por debajo: acompaña a la exposición sin
+   disputarle el renglón. Siempre en equivalente de 35 mm, que es lo
+   único comparable entre cámaras de sensores distintos. */
+.ficha__focal{
+  font-size:.72rem;letter-spacing:.14em;
+  color:var(--niebla);
+  margin-top:.3rem;
+  font-variant-numeric:tabular-nums;
+}
+.ficha__focal:empty{display:none}
+.ficha__exposicion:not(:empty) ~ .ficha__lista,
+.ficha__focal:not(:empty) ~ .ficha__lista{margin-top:1.1rem}
+
 /* Rótulo y valor en el mismo renglón: es lo que más alto ahorra */
 .ficha__lista{display:flex;flex-direction:column}
 .ficha__fila{
@@ -1184,6 +1208,8 @@ a{color:inherit;text-decoration:none}
   <aside class="ficha" aria-label="Datos de la fotografía">
     <span class="visor__cuenta" id="visor-cuenta"></span>
     <h2 class="ficha__titulo" id="visor-lugar"></h2>
+    <p class="ficha__exposicion" id="visor-exposicion"></p>
+    <p class="ficha__focal" id="visor-focal"></p>
     <dl class="ficha__lista" id="visor-lista"></dl>
   </aside>
 </div>
@@ -1215,6 +1241,17 @@ a{color:inherit;text-decoration:none}
          acentos o el filtro no encontraba nada. */
       ciudad:  p.city || '',
       zona:    p.zone || '',
+      /* sólo para el visor: ni filtra ni sale en la portada */
+      tecnica: {
+        objetivo:  p.lens       || '',
+        apertura:  p.aperture   || '',
+        velocidad: p.shutter    || '',
+        iso:       p.iso        || null,
+        focal:     p.focal_35   || null,
+        pelicula:  p.film       || '',
+        revelado:  p.developing || '',
+        anio:      p.year       || ''
+      },
       formato: p.capture_type,
       color:   p.color_mode,
       camara:  p.camera || '',
@@ -1246,6 +1283,13 @@ a{color:inherit;text-decoration:none}
     return cubos.map(c => c.indices.sort((a, b) => a - b).map(i => lista[i]));
   }
 
+  /* La ficha técnica de cada fotografía, aparte y a propósito.
+     En el dataset de las teselas está lo que filtra y lo que el mosaico
+     necesita; esto otro sólo lo consulta el visor al abrir una foto. Al
+     no vivir ahí, no puede convertirse en filtro por descuido, que era
+     justo lo que se quería evitar. */
+  const TECNICA = new Map();
+
   /* Crea el elemento de una foto */
   function crearFoto(f, prioritaria){
     const fig = document.createElement('figure');
@@ -1255,6 +1299,7 @@ a{color:inherit;text-decoration:none}
     fig.dataset.trato   = f.color;
     if(f.camara) fig.dataset.camara = f.camara;
     if(f.zona)   fig.dataset.zona   = f.zona;
+    TECNICA.set(f.archivo, f.tecnica);
 
     const img = document.createElement('img');
     img.src = CARPETA + f.archivo;
@@ -1602,6 +1647,8 @@ a{color:inherit;text-decoration:none}
   const visor      = document.getElementById('visor');
   const visorImg   = document.getElementById('visor-img');
   const visorLugar = document.getElementById('visor-lugar');
+  const visorExpo  = document.getElementById('visor-exposicion');
+  const visorFocal = document.getElementById('visor-focal');
   const visorLista = document.getElementById('visor-lista');
   const visorCuenta= document.getElementById('visor-cuenta');
   const btnPrev    = visor.querySelector('.visor__flecha--prev');
@@ -1626,22 +1673,40 @@ a{color:inherit;text-decoration:none}
     const rotulo = foto.querySelector('.tesela__rotulo');
     const lugar  = rotulo ? rotulo.textContent.trim() : '';
     const ciudad = d.ciudad || '';
+    const img    = foto.querySelector('img');
+    const t = TECNICA.get(img ? img.getAttribute('src').split('/').pop() : '') || {};
+
+    /* Los ajustes del disparo, cantados de un tirón como se dicen de viva
+       voz, y la focal debajo. Lo que falte no deja hueco. */
+    const exposicion = [
+      t.apertura,
+      t.velocidad,
+      t.iso ? 'ISO ' + t.iso : null
+    ].filter(Boolean).join(' · ');
+    const focal = t.focal ? t.focal + ' mm' : '';
+
     const filas  = [
       /* si el lugar ya encabeza, la ciudad baja a la lista */
       lugar ? ['Ciudad', ciudad] : null,
       /* la zona va pegada a la ciudad, que es de donde cuelga */
       d.zona              ? ['Zona', d.zona]                     : null,
       d.camara            ? ['Cámara', d.camara]                 : null,
+      t.objetivo          ? ['Objetivo', t.objetivo]             : null,
+      t.pelicula          ? ['Película', t.pelicula]             : null,
+      t.revelado          ? ['Revelado', t.revelado]             : null,
       ETIQUETAS[d.formato]? ['Formato', ETIQUETAS[d.formato]]    : null,
-      ETIQUETAS[d.trato]  ? ['Tratamiento', ETIQUETAS[d.trato]]  : null
+      ETIQUETAS[d.trato]  ? ['Tratamiento', ETIQUETAS[d.trato]]  : null,
+      t.anio              ? ['Año', t.anio]                      : null
     ].filter(Boolean);
-    return { titulo: lugar || ciudad, filas };
+    return { titulo: lugar || ciudad, exposicion, focal, filas };
   }
 
   /* Vuelca la ficha en el panel */
   function pintarFicha(foto){
-    const { titulo, filas } = fichaDeFoto(foto);
+    const { titulo, exposicion, focal, filas } = fichaDeFoto(foto);
     visorLugar.textContent = titulo;
+    visorExpo.textContent  = exposicion;
+    visorFocal.textContent = focal;
     visorLista.textContent = '';
     filas.forEach(([rotulo, valor]) => {
       const fila = document.createElement('div');

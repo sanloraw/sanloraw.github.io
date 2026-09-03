@@ -10,7 +10,13 @@
       "zone": "Fanzara",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5.6",
+      "shutter": "1/500 s",
+      "iso": 200,
+      "focal_35": 216,
+      "year": "2024"
     },
     {
       "id": 2,
@@ -22,7 +28,13 @@
       "zone": "El Tormo",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5.6",
+      "shutter": "1/4000 s",
+      "iso": 200,
+      "focal_35": 149,
+      "year": "2024"
     },
     {
       "id": 3,
@@ -34,7 +46,13 @@
       "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5",
+      "shutter": "1/320 s",
+      "iso": 100,
+      "focal_35": 56,
+      "year": "2025"
     },
     {
       "id": 4,
@@ -46,7 +64,13 @@
       "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5",
+      "shutter": "1/320 s",
+      "iso": 100,
+      "focal_35": 102,
+      "year": "2025"
     },
     {
       "id": 5,
@@ -58,7 +82,13 @@
       "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5.6",
+      "shutter": "1/30 s",
+      "iso": 100,
+      "focal_35": 195,
+      "year": "2025"
     },
     {
       "id": 6,
@@ -70,7 +100,13 @@
       "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5.6",
+      "shutter": "1/250 s",
+      "iso": 800,
+      "focal_35": 194,
+      "year": "2025"
     },
     {
       "id": 7,
@@ -82,7 +118,13 @@
       "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5.6",
+      "shutter": "1/125 s",
+      "iso": 2000,
+      "focal_35": 152,
+      "year": "2025"
     },
     {
       "id": 8,
@@ -94,7 +136,12 @@
       "zone": "Barajas",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/10",
+      "shutter": "1/200 s",
+      "iso": 80,
+      "focal_35": 61,
+      "year": "2026"
     },
     {
       "id": 9,
@@ -106,7 +153,12 @@
       "zone": "Barajas",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/9",
+      "shutter": "1/125 s",
+      "iso": 80,
+      "focal_35": 42,
+      "year": "2026"
     },
     {
       "id": 10,
@@ -118,7 +170,12 @@
       "zone": "Barajas",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/4.5",
+      "shutter": "1/25 s",
+      "iso": 400,
+      "focal_35": 61,
+      "year": "2026"
     },
     {
       "id": 11,
@@ -129,7 +186,12 @@
       "city": "Madrid",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/5.6",
+      "shutter": "1/40 s",
+      "iso": 400,
+      "focal_35": 158,
+      "year": "2026"
     },
     {
       "id": 12,
@@ -141,7 +203,12 @@
       "zone": "Vallekas",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/4",
+      "shutter": "1/50 s",
+      "iso": 200,
+      "focal_35": 51,
+      "year": "2026"
     },
     {
       "id": 13,
@@ -153,7 +220,12 @@
       "zone": "Garganta de los Montes",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/13",
+      "shutter": "1/125 s",
+      "iso": 80,
+      "focal_35": 108,
+      "year": "2026"
     },
     {
       "id": 14,
@@ -164,7 +236,12 @@
       "city": "Madrid",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/4.5",
+      "shutter": "1/50 s",
+      "iso": 400,
+      "focal_35": 75,
+      "year": "2026"
     },
     {
       "id": 15,
@@ -175,7 +252,12 @@
       "city": "Madrid",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/5.6",
+      "shutter": "1/125 s",
+      "iso": 400,
+      "focal_35": 158,
+      "year": "2026"
     },
     {
       "id": 16,
@@ -186,7 +268,12 @@
       "city": "Madrid",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/5.6",
+      "shutter": "1/200 s",
+      "iso": 80,
+      "focal_35": 158,
+      "year": "2026"
     },
     {
       "id": 17,
@@ -197,7 +284,12 @@
       "city": "Madrid",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/5",
+      "shutter": "1/500 s",
+      "iso": 80,
+      "focal_35": 88,
+      "year": "2026"
     },
     {
       "id": 18,
@@ -208,7 +300,12 @@
       "city": "Madrid",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/4.5",
+      "shutter": "1/125 s",
+      "iso": 80,
+      "focal_35": 75,
+      "year": "2026"
     },
     {
       "id": 19,
@@ -220,7 +317,13 @@
       "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5.6",
+      "shutter": "1/320 s",
+      "iso": 100,
+      "focal_35": 216,
+      "year": "2025"
     },
     {
       "id": 20,
@@ -232,7 +335,13 @@
       "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5.6",
+      "shutter": "1/320 s",
+      "iso": 100,
+      "focal_35": 216,
+      "year": "2025"
     },
     {
       "id": 21,
@@ -244,7 +353,13 @@
       "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5",
+      "shutter": "1/320 s",
+      "iso": 100,
+      "focal_35": 99,
+      "year": "2025"
     },
     {
       "id": 22,
@@ -256,7 +371,13 @@
       "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5",
+      "shutter": "1/320 s",
+      "iso": 100,
+      "focal_35": 38,
+      "year": "2025"
     },
     {
       "id": 23,
@@ -268,7 +389,13 @@
       "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5.6",
+      "shutter": "1/200 s",
+      "iso": 100,
+      "focal_35": 216,
+      "year": "2025"
     },
     {
       "id": 24,
@@ -280,7 +407,13 @@
       "zone": "Barajas",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S18-135mm f/3.5-5.6 IS STM",
+      "aperture": "f/5.6",
+      "shutter": "1/125 s",
+      "iso": 2000,
+      "focal_35": 152,
+      "year": "2025"
     },
     {
       "id": 25,
@@ -291,7 +424,13 @@
       "city": "Valencia",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF-S55-250mm f/4-5.6 IS II",
+      "aperture": "f/8",
+      "shutter": "1/320 s",
+      "iso": 100,
+      "focal_35": 126,
+      "year": "2025"
     },
     {
       "id": 26,
@@ -302,7 +441,13 @@
       "city": "Valencia",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF50mm f/1.8 STM",
+      "aperture": "f/5",
+      "shutter": "1/200 s",
+      "iso": 100,
+      "focal_35": 80,
+      "year": "2025"
     },
     {
       "id": 27,
@@ -313,7 +458,13 @@
       "city": "Valencia",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF50mm f/1.8 STM",
+      "aperture": "f/3.2",
+      "shutter": "1/80 s",
+      "iso": 100,
+      "focal_35": 80,
+      "year": "2025"
     },
     {
       "id": 28,
@@ -324,7 +475,13 @@
       "city": "Valencia",
       "camera": "Canon 750D",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "lens": "EF50mm f/1.8 STM",
+      "aperture": "f/5",
+      "shutter": "1/200 s",
+      "iso": 100,
+      "focal_35": 80,
+      "year": "2025"
     },
     {
       "id": 29,
@@ -336,7 +493,12 @@
       "zone": "Torres",
       "camera": "Sony DSC-W730",
       "capture_type": "digital",
-      "color_mode": "color"
+      "color_mode": "color",
+      "aperture": "f/5",
+      "shutter": "1/100 s",
+      "iso": 80,
+      "focal_35": 88,
+      "year": "2026"
     }
   ]
 }

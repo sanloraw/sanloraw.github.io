@@ -113,10 +113,15 @@ def _medir_webp(ruta):
 # ─────────────────────────────────────────────────────────────────────
 
 def exif(ruta):
-    """{'camara': str, 'fecha': 'AAAA-MM-DD'} de lo que haya. Nunca falla."""
+    """Lo que el original sepa contar de su propio disparo. Nunca falla:
+    lo que no esté, no sale.
+
+    Devuelve camara, fecha, anio, apertura, velocidad, iso, focal (la real,
+    en mm) y objetivo.
+    """
     try:
         with open(ruta, 'rb') as fh:
-            d = fh.read(300000)
+            d = fh.read(400000)
         i = d.find(b'Exif\x00\x00')
         if i < 0:
             return {}
@@ -129,20 +134,39 @@ def exif(ruta):
             campos = {}
             for k in range(n):
                 e = desplazamiento + 2 + k * 12
-                etiqueta, _tipo, cuenta = struct.unpack(en + 'HHI', t[e:e + 8])
-                campos[etiqueta] = (cuenta, t[e + 8:e + 12])
+                etiqueta, tipo, cuenta = struct.unpack(en + 'HHI', t[e:e + 8])
+                campos[etiqueta] = (tipo, cuenta, t[e + 8:e + 12])
             return campos
 
         def texto(etiqueta, campos):
             if etiqueta not in campos:
                 return None
-            cuenta, valor = campos[etiqueta]
+            _tipo, cuenta, valor = campos[etiqueta]
             if cuenta > 4:
                 p = struct.unpack(en + 'I', valor)[0]
                 bruto = t[p:p + cuenta - 1]
             else:
                 bruto = valor[:max(cuenta - 1, 0)]
             return bruto.decode('latin1', 'ignore').strip('\x00 ').strip()
+
+        def racional(etiqueta, campos):
+            """Devuelve (numerador, denominador) o None."""
+            if etiqueta not in campos:
+                return None
+            _tipo, _cuenta, valor = campos[etiqueta]
+            p = struct.unpack(en + 'I', valor)[0]
+            a, b = struct.unpack(en + 'II', t[p:p + 8])
+            return (a, b) if b else None
+
+        def entero(etiqueta, campos):
+            if etiqueta not in campos:
+                return None
+            tipo, _cuenta, valor = campos[etiqueta]
+            if tipo == 3:
+                return struct.unpack(en + 'H', valor[:2])[0]
+            if tipo == 4:
+                return struct.unpack(en + 'I', valor)[0]
+            return None
 
         principal = entradas(raiz)
         datos = {}
@@ -154,15 +178,73 @@ def exif(ruta):
             if marca and not modelo.lower().startswith(marca.split()[0].lower()):
                 modelo = f'{marca.split()[0].title()} {modelo}'
             datos['camara'] = modelo
+
         if 0x8769 in principal:
-            p = struct.unpack(en + 'I', principal[0x8769][1])[0]
+            p = struct.unpack(en + 'I', principal[0x8769][2])[0]
             sub = entradas(p)
+
             fecha = texto(0x9003, sub)
             if fecha and len(fecha) >= 10:
                 datos['fecha'] = fecha[:10].replace(':', '-')
+                datos['anio'] = fecha[:4]
+
+            f = racional(0x829D, sub)          # FNumber
+            if f:
+                v = f[0] / f[1]
+                # f/5.6 y no f/5.60; f/8 y no f/8.0
+                datos['apertura'] = 'f/' + (f'{v:.1f}'.rstrip('0').rstrip('.'))
+
+            v = racional(0x829A, sub)          # ExposureTime
+            if v:
+                num, den = v
+                if num and den / num >= 1:
+                    datos['velocidad'] = f'1/{round(den / num)} s'
+                elif num:
+                    datos['velocidad'] = (f'{num / den:g} s')
+
+            iso = entero(0x8827, sub)
+            if iso:
+                datos['iso'] = iso
+
+            fl = racional(0x920A, sub)         # FocalLength, la real
+            if fl:
+                datos['focal'] = fl[0] / fl[1]
+
+            obj = texto(0xA434, sub)           # LensModel
+            if obj:
+                datos['objetivo'] = obj
+
         return datos
     except Exception:
         return {}
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  Focal equivalente a 35 mm
+# ─────────────────────────────────────────────────────────────────────
+
+# Cuánto hay que multiplicar la focal real de cada cámara para saber qué
+# encuadre da. Sin esto los números no se pueden comparar entre cámaras:
+# 8 mm en la compacta es un angular corriente y en la réflex un ojo de pez.
+# Las de carrete de 35 mm van a 1: ahí la focal ya es la equivalente.
+FACTOR_RECORTE = {
+    'Canon 750D': 1.6,          # APS-C
+    'Sony DSC-W730': 5.62,      # sensor 1/2.3"
+    'FED-2': 1.0,               # 35 mm
+    'Zorki-6': 1.0,
+    'Smena-2': 1.0,
+    'Olympus Superzoom 70S': 1.0,
+}
+
+
+def focal_equivalente(focal_real, camara):
+    """Focal en equivalente de 35 mm, redondeada. None si no sé el factor."""
+    if not focal_real or not camara:
+        return None
+    factor = FACTOR_RECORTE.get(camara)
+    if not factor:
+        return None
+    return round(focal_real * factor)
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -183,8 +265,16 @@ def escribir_fichas(fichas):
     os.replace(tmp, FILTROS)
 
 
+# Primero lo que filtra y se ve en la portada; después la ficha técnica,
+# que sólo asoma en el visor.
 ORDEN = ['id', 'filename', 'width', 'height', 'place', 'city', 'zone',
-         'camera', 'capture_type', 'color_mode']
+         'camera', 'capture_type', 'color_mode',
+         'lens', 'aperture', 'shutter', 'iso', 'focal_35',
+         'film', 'developing', 'year']
+
+# Los de la ficha técnica: no filtran, no salen en el mosaico.
+TECNICOS = ['lens', 'aperture', 'shutter', 'iso', 'focal_35',
+            'film', 'developing', 'year']
 
 
 def ordenar(ficha):
@@ -366,8 +456,18 @@ def estado():
         'camaras': camaras,
         'formatoDe': formato_de,
         'zonasDe': zonas_de,
+        'peliculas': sorted({(f.get('film') or '').strip()
+                             for f in fichas if f.get('film')}),
+        'camarasConFactor': sorted(FACTOR_RECORTE),
+        'tecnicos': TECNICOS,
         'magick': bool(MAGICK),
     }
+
+
+def tecnica_de(nombre, camara):
+    """Lo que el visor enseñaría de esa foto si la guardaras ahora mismo.
+    La usa el taller para ir mostrando la lectura del original."""
+    return datos_tecnicos(nombre, camara)
 
 
 def importar():
@@ -389,6 +489,58 @@ def importar():
                 os.remove(destino)
             fallos.append({'archivo': n, 'motivo': str(e)[:200]})
     return hechas, fallos
+
+
+def datos_tecnicos(nombre_webp, camara):
+    """Lo que el original cuenta de su disparo, listo para la ficha."""
+    original = next((o for o in os.listdir(ORIGINALES)
+                     if base(o) == base(nombre_webp)), None) \
+        if os.path.isdir(ORIGINALES) else None
+    if not original:
+        return {}
+    e = exif(os.path.join(ORIGINALES, original))
+    salida = {}
+    for clave, campo in (('apertura', 'aperture'), ('velocidad', 'shutter'),
+                         ('iso', 'iso'), ('objetivo', 'lens'),
+                         ('anio', 'year')):
+        if e.get(clave):
+            salida[campo] = e[clave]
+    eq = focal_equivalente(e.get('focal'), camara)
+    if eq:
+        salida['focal_35'] = eq
+    return salida
+
+
+def _ficha_tecnica(ficha, entrada, nombre):
+    """Rellena los campos que sólo se ven en el visor.
+
+    En digital manda el original: se releen del EXIF en cada guardado, así
+    que se corrigen solos si cambia la cámara —y con ella el factor de
+    recorte—. En analógico no hay EXIF que valga, porque el del escaneo es
+    del escáner, así que manda lo que escribas.
+    """
+    digital = ficha.get('capture_type') == 'digital'
+    leidos = datos_tecnicos(nombre, ficha.get('camera')) if digital else {}
+
+    for campo in TECNICOS:
+        # Película y revelado son cosa del carrete: en digital no existen
+        # por mucho que lleguen escritos.
+        if digital and campo in ('film', 'developing'):
+            ficha.pop(campo, None)
+            continue
+
+        escrito = entrada.get(campo)
+        escrito = escrito.strip() if isinstance(escrito, str) else escrito
+        valor = leidos.get(campo) if digital and leidos.get(campo) else escrito
+
+        # ISO y focal son números aunque lleguen escritos a mano
+        if campo in ('iso', 'focal_35') and isinstance(valor, str):
+            valor = int(valor) if valor.strip().isdigit() else None
+
+        if valor in (None, '', 0):
+            ficha.pop(campo, None)
+        else:
+            ficha[campo] = valor
 
 
 def guardar_ficha(entrada):
@@ -422,6 +574,8 @@ def guardar_ficha(entrada):
         ficha['zone'] = zona
     else:
         ficha.pop('zone', None)
+
+    _ficha_tecnica(ficha, entrada, nombre)
 
     if not existente:
         ficha['id'] = max([f.get('id', 0) for f in fichas], default=0) + 1
@@ -488,6 +642,19 @@ class Manejador(SimpleHTTPRequestHandler):
             try:
                 with CERROJO:
                     self._json(estado())
+            except Exception as e:
+                self._json({'error': str(e)}, 500)
+            return
+
+        # Qué diría el original de su disparo con la cámara que le pongas.
+        # Va aparte de /datos porque cambia al tocar la cámara: el factor
+        # de recorte depende de ella.
+        if ruta.startswith('/taller/tecnica'):
+            try:
+                from urllib.parse import parse_qs, urlparse
+                q = parse_qs(urlparse(self.path).query)
+                self._json(tecnica_de(q.get('foto', [''])[0],
+                                      q.get('camara', [''])[0]))
             except Exception as e:
                 self._json({'error': str(e)}, 500)
             return
