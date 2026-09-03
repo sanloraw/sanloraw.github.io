@@ -491,6 +491,7 @@ def estado():
         'camarasConFactor': sorted(FACTOR_RECORTE),
         'tecnicos': TECNICOS,
         'magick': bool(MAGICK),
+        'sinPublicar': sin_publicar(),
     }
 
 
@@ -638,6 +639,89 @@ def borrar_ficha(nombre):
 
 
 # ─────────────────────────────────────────────────────────────────────
+#  Publicar: lo etiquetado se sube a la web
+# ─────────────────────────────────────────────────────────────────────
+
+# Sólo esto se sube desde el taller. El código del sitio y del propio
+# taller se queda fuera a propósito: aquí se publica contenido, y un botón
+# que arrastrase cambios de código a medias sería una trampa.
+PUBLICABLE = ['filtros.json', 'index.html', 'fotos']
+
+
+def _git(*args, timeout=90):
+    """Git sin preguntar nada: si faltan credenciales falla en vez de
+    quedarse esperando una contraseña que nadie va a escribir."""
+    entorno = dict(os.environ, GIT_TERMINAL_PROMPT='0', GIT_ASKPASS='echo',
+                   GCM_INTERACTIVE='never')
+    return subprocess.run(['git', *args], cwd=RAIZ, env=entorno,
+                          capture_output=True, text=True,
+                          encoding='utf-8', errors='replace', timeout=timeout)
+
+
+def _lineas_estado():
+    r = _git('status', '--porcelain', '--', *PUBLICABLE)
+    return [l for l in r.stdout.splitlines() if l.strip()]
+
+
+def sin_publicar():
+    """Qué hay hecho que la web todavía no enseña."""
+    try:
+        lineas = _lineas_estado()
+    except Exception:
+        return {'disponible': False, 'fotos': 0, 'nuevas': 0, 'lineas': []}
+    nuevas = [l for l in lineas if l[:2].strip() == '??' or l[0] == 'A']
+    return {
+        'disponible': True,
+        'cambios': len(lineas),
+        'nuevas': len([l for l in nuevas if '/fotos/' in l or l[3:].startswith('fotos/')]),
+        'lineas': [l[3:] for l in lineas],
+    }
+
+
+def _mensaje(lineas):
+    """Un asunto que diga qué se sube, contado en fichas y fotos."""
+    fotos_nuevas = len([l for l in lineas if l.startswith('fotos/')])
+    if fotos_nuevas and len(lineas) > fotos_nuevas:
+        cuerpo = (f'Añade {fotos_nuevas} '
+                  f'{"fotografía" if fotos_nuevas == 1 else "fotografías"} '
+                  f'y actualiza el etiquetado')
+    elif fotos_nuevas:
+        cuerpo = (f'Añade {fotos_nuevas} '
+                  f'{"fotografía" if fotos_nuevas == 1 else "fotografías"}')
+    else:
+        cuerpo = 'Actualiza el etiquetado de la galería'
+    return cuerpo + '\n\nPublicado desde el taller.\n'
+
+
+def publicar():
+    """add + commit + push de lo etiquetado. Devuelve qué ha pasado."""
+    lineas = _lineas_estado()
+    if not lineas:
+        return {'nada': True}
+
+    archivos = [l[3:].strip('"') for l in lineas]
+    r = _git('add', '--', *PUBLICABLE)
+    if r.returncode:
+        raise RuntimeError('git add: ' + (r.stderr or r.stdout)[:300])
+
+    r = _git('commit', '-m', _mensaje(archivos))
+    if r.returncode:
+        raise RuntimeError('git commit: ' + (r.stderr or r.stdout)[:300])
+
+    corto = _git('rev-parse', '--short', 'HEAD').stdout.strip()
+
+    r = _git('push', 'origin', 'HEAD', timeout=180)
+    if r.returncode:
+        # El commit ya está hecho; lo que falló fue salir a internet.
+        raise RuntimeError(
+            'El commit se ha hecho (' + corto + ') pero no he podido '
+            'subirlo: ' + (r.stderr or r.stdout).strip()[:300])
+
+    return {'commit': corto, 'archivos': len(archivos),
+            'mensaje': _mensaje(archivos).splitlines()[0]}
+
+
+# ─────────────────────────────────────────────────────────────────────
 #  Servidor
 # ─────────────────────────────────────────────────────────────────────
 
@@ -719,6 +803,10 @@ class Manejador(SimpleHTTPRequestHandler):
                 with CERROJO:
                     ficha = guardar_ficha(datos)
                 self._json({'ficha': ficha})
+                return
+            if self.path.startswith('/taller/publicar'):
+                with CERROJO:
+                    self._json(publicar())
                 return
             if self.path.startswith('/taller/borrar'):
                 datos = self._cuerpo()

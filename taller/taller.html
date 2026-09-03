@@ -37,6 +37,20 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
   text-transform:uppercase;color:var(--niebla)}
 .cuentas b{color:var(--sumi);font-weight:500;font-variant-numeric:tabular-nums}
 .modos{margin-left:auto;display:flex;gap:.4rem}
+
+/* Publicar: el único botón que sale a internet, así que se distingue de
+   los de navegar y dice cuánto va a subir. */
+.publicar{
+  margin-left:.6rem;
+  font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:.35rem .9rem;border-radius:2px;
+  background:var(--pino);color:var(--luz);border:1px solid var(--pino);
+  transition:background .18s;
+}
+.publicar:hover:not(:disabled){background:var(--sumi);border-color:var(--sumi)}
+.publicar:disabled{
+  background:none;color:var(--lino);border-color:var(--lino);cursor:default;
+}
 .modo{
   font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
   padding:.35rem .8rem;border:1px solid var(--lino);border-radius:2px;
@@ -171,22 +185,48 @@ kbd{
 .vacio h2{font-family:var(--serif);font-weight:400;font-size:2rem;line-height:1.1}
 .vacio p{color:var(--ceniza);max-width:26rem;font-size:.92rem}
 
-/* ── tira de etiquetadas ── */
-.tira{
-  grid-column:1 / -1;padding:clamp(1rem,3vw,2rem);
-  display:grid;gap:.8rem;
-  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+/* ── cuadrícula: verlas todas de un vistazo para elegir cuál tocar ── */
+.cuadricula{
+  grid-column:1 / -1;
+  padding:clamp(1rem,3vw,2rem);
+  align-content:start;
+  overflow-y:auto;
+  display:grid;gap:.9rem;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
 }
 .miniatura{
   border:1px solid var(--lino);background:var(--luz);border-radius:2px;
-  overflow:hidden;text-align:left;transition:border-color .18s;
+  overflow:hidden;text-align:left;padding:0;
+  display:flex;flex-direction:column;
+  transition:border-color .18s, transform .18s;
 }
-.miniatura:hover{border-color:var(--roble)}
-.miniatura img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
-.miniatura__pie{padding:.5rem .6rem;font-size:.74rem;color:var(--ceniza)}
-.miniatura__pie b{display:block;color:var(--sumi);font-weight:500;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.miniatura__pie span{color:var(--niebla)}
+.miniatura:hover{border-color:var(--roble);transform:translateY(-2px)}
+.miniatura img{
+  width:100%;display:block;background:var(--tatami);
+  aspect-ratio:var(--proporcion,4/3);object-fit:cover;
+}
+.miniatura__pie{
+  padding:.45rem .6rem .55rem;
+  font-size:.72rem;color:var(--ceniza);line-height:1.4;
+  display:flex;flex-direction:column;gap:.1rem;
+}
+.miniatura__pie b{
+  color:var(--sumi);font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.miniatura__pie span{
+  color:var(--niebla);font-size:.68rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Las que aún no tienen ficha: se ven a la primera entre las demás */
+.miniatura--pendiente{border-color:var(--roble);border-style:dashed}
+.miniatura--pendiente .miniatura__pie b{color:var(--pino)}
+.marca{
+  align-self:flex-start;margin-top:.15rem;
+  font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--pino);background:rgba(140,98,57,.1);
+  padding:.05rem .35rem;border-radius:2px;
+}
 </style>
 </head>
 <body>
@@ -196,8 +236,10 @@ kbd{
   <div class="cuentas" id="cuentas"></div>
   <div class="modos">
     <button class="modo" id="modo-pendientes" aria-pressed="true">Sin etiquetar</button>
+    <button class="modo" id="modo-cuadricula" aria-pressed="false">Cuadrícula</button>
     <button class="modo" id="modo-todas" aria-pressed="false">Todas</button>
   </div>
+  <button class="publicar" id="publicar" hidden></button>
 </header>
 
 <div id="avisos"></div>
@@ -239,6 +281,7 @@ async function cargar(){
     return;
   }
   pintarCuentas();
+  pintarPublicar();
   pintarAvisoImportar();
   rehacerCola();
   pintar();
@@ -287,6 +330,13 @@ function rehacerCola(){
   if(i >= cola.length) i = Math.max(0, cola.length - 1);
 }
 
+/* Todas las fotografías del taller, con o sin ficha, en el orden en que
+   se ven en la cuadrícula: primero lo que falta por etiquetar. */
+function todasLasFotos(){
+  return [...D.pendientes.map(p => ({...p, nueva:true})),
+          ...D.etiquetadas.map(f => ({...f, nueva:false}))];
+}
+
 /* Valores de partida de la foto actual: lo que ya tuviera, o lo que el
    EXIF sugiere, o lo último que usaste — en ese orden. */
 function partida(foto){
@@ -315,7 +365,7 @@ let actual = null;
 
 function pintar(){
   const t = $('#taller');
-  if(modo === 'todas' && cola.length && i === -1){ return pintarTira(); }
+  if(modo === 'cuadricula') return pintarCuadricula();
   if(!cola.length){
     t.innerHTML = `<div class="vacio">
       <h2>${modo === 'pendientes' ? 'Nada que etiquetar' : 'Todavía no hay fichas'}</h2>
@@ -567,16 +617,95 @@ async function guardar(){
   }
 }
 
-function pintarTira(){ /* reservado */ }
+/* La cuadrícula: todas en pequeño para elegir cuál tocar. Cada una dice
+   dónde está clasificada, así que los huecos se ven sin abrir nada. */
+function pintarCuadricula(){
+  const fotos = todasLasFotos();
+  if(!fotos.length){
+    $('#taller').innerHTML = `<div class="vacio">
+      <h2>Todavía no hay fotografías</h2>
+      <p>Deja originales en <b>fotos/_originales/</b> y conviértelos.</p>
+    </div>`;
+    return;
+  }
+  $('#taller').innerHTML = `<div class="cuadricula">` + fotos.map((f, n) => {
+    const sitio = [f.city, f.zone].filter(Boolean).join(' · ');
+    return `<button type="button" class="miniatura${f.nueva ? ' miniatura--pendiente' : ''}"
+              data-n="${n}" title="${esc(f.filename)}">
+      <img src="/fotos/${encodeURIComponent(f.filename)}" alt="" loading="lazy"
+           style="--proporcion:${f.width || 4}/${f.height || 3}">
+      <span class="miniatura__pie">
+        <b>${esc(f.place || f.city || f.filename)}</b>
+        ${f.nueva ? '<span class="marca">sin ficha</span>'
+                  : `<span>${esc(sitio || '—')}</span>`}
+      </span>
+    </button>`;
+  }).join('') + `</div>`;
+
+  $('#taller').querySelectorAll('.miniatura').forEach(b => {
+    b.onclick = () => abrirDesdeCuadricula(fotos[+b.dataset.n]);
+  });
+}
+
+/* Al pulsar una miniatura se abre en el panel, en el modo que le toque */
+function abrirDesdeCuadricula(foto){
+  modo = foto.nueva ? 'pendientes' : 'todas';
+  actual = null;
+  rehacerCola();
+  const n = cola.findIndex(f => f.filename === foto.filename);
+  i = n < 0 ? 0 : n;
+  marcarModo();
+  pintar();
+}
 
 $('#modo-pendientes').onclick = () => cambiarModo('pendientes');
+$('#modo-cuadricula').onclick = () => cambiarModo('cuadricula');
 $('#modo-todas').onclick = () => cambiarModo('todas');
+
+function marcarModo(){
+  $('#modo-pendientes').setAttribute('aria-pressed', modo === 'pendientes');
+  $('#modo-cuadricula').setAttribute('aria-pressed', modo === 'cuadricula');
+  $('#modo-todas').setAttribute('aria-pressed', modo === 'todas');
+}
+
 function cambiarModo(m){
   modo = m; i = 0; actual = null;
-  $('#modo-pendientes').setAttribute('aria-pressed', m === 'pendientes');
-  $('#modo-todas').setAttribute('aria-pressed', m === 'todas');
+  marcarModo();
   rehacerCola(); pintar();
 }
+
+/* ── Publicar ──
+   El único botón que sale a internet. Dice cuánto va a subir antes de
+   pulsarlo, y no se ofrece cuando no hay nada que subir. */
+function pintarPublicar(){
+  const b = $('#publicar');
+  const s = D.sinPublicar || {};
+  if(!s.disponible){ b.hidden = true; return; }
+  b.hidden = false;
+  b.disabled = !s.cambios;
+  b.textContent = s.cambios
+    ? `Publicar · ${s.cambios}`
+    : 'Todo publicado';
+  b.title = s.cambios ? s.lineas.join('\n') : 'La web está al día';
+}
+
+$('#publicar').onclick = async () => {
+  const b = $('#publicar');
+  const antes = b.textContent;
+  b.disabled = true; b.textContent = 'Publicando…';
+  try{
+    const r = await pedir('/taller/publicar', {});
+    await cargar();          // primero refrescar, que borra los avisos…
+    if(r.nada){ avisar('No había nada que publicar.'); }
+    else{                    // …y después contar cómo ha ido
+      avisar(`Publicado <b>${esc(r.commit)}</b> — ${esc(r.mensaje)}. ` +
+             `Tarda un momento en verse en sanloraw.github.io.`);
+    }
+  }catch(e){
+    avisar(`No se ha podido publicar: <b>${esc(e.message)}</b>`, 'aviso--error');
+    b.disabled = false; b.textContent = antes;
+  }
+};
 
 document.addEventListener('keydown', ev => {
   if(ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)){
