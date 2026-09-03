@@ -461,6 +461,11 @@ def estado():
             },
         })
 
+    # Fichas que nombran un archivo que ya no está: pasa al borrar una
+    # foto a mano desde la carpeta. Publicar así dejaría huecos rotos en
+    # la galería, así que hay que verlas.
+    huerfanas = [f['filename'] for f in fichas if f['filename'] not in webps]
+
     ciudades, camaras, formato_de = [], [], {}
     zonas_de = {}          # ciudad -> [zonas ya usadas en ella]
     for f in fichas:
@@ -491,6 +496,7 @@ def estado():
         'camarasConFactor': sorted(FACTOR_RECORTE),
         'tecnicos': TECNICOS,
         'magick': bool(MAGICK),
+        'huerfanas': huerfanas,
         'sinPublicar': sin_publicar(),
     }
 
@@ -630,12 +636,35 @@ def guardar_ficha(entrada):
     return ficha
 
 
-def borrar_ficha(nombre):
+def borrar_ficha(nombre, borrar_archivo=False):
+    """Quita una fotografía del sitio.
+
+    El original nunca se toca: es lo único irrecuperable, y el WebP
+    siempre se puede volver a sacar de él.
+    """
     fichas = [f for f in leer_fichas() if f['filename'] != nombre]
     fichas = [ordenar(f) for f in fichas]
     html = html_regenerado(fichas)
     escribir_fichas(fichas)
     escribir_index(html)
+    if borrar_archivo:
+        ruta = os.path.join(WEBPS, nombre)
+        if os.path.isfile(ruta):
+            os.remove(ruta)
+
+
+def limpiar_huerfanas():
+    """Quita las fichas cuyo archivo ya no existe. Devuelve cuáles."""
+    fichas = leer_fichas()
+    webps = {n for n in os.listdir(WEBPS) if n.lower().endswith('.webp')}
+    quitadas = [f['filename'] for f in fichas if f['filename'] not in webps]
+    if not quitadas:
+        return []
+    quedan = [ordenar(f) for f in fichas if f['filename'] in webps]
+    html = html_regenerado(quedan)
+    escribir_fichas(quedan)
+    escribir_index(html)
+    return quitadas
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -695,6 +724,19 @@ def _mensaje(lineas):
 
 def publicar():
     """add + commit + push de lo etiquetado. Devuelve qué ha pasado."""
+    # Con fichas huérfanas, publicar subiría el borrado de los archivos
+    # dejando sus fichas: la galería saldría con huecos rotos. Se para
+    # antes de tocar nada.
+    fichas = leer_fichas()
+    webps = {n for n in os.listdir(WEBPS) if n.lower().endswith('.webp')}
+    huerfanas = [f['filename'] for f in fichas if f['filename'] not in webps]
+    if huerfanas:
+        raise RuntimeError(
+            'Hay ' + str(len(huerfanas)) + ' ficha(s) que nombran una foto '
+            'que ya no está (' + ', '.join(huerfanas[:3]) +
+            ('…' if len(huerfanas) > 3 else '') + '). Quítalas primero o la '
+            'galería quedaría con huecos rotos.')
+
     lineas = _lineas_estado()
     if not lineas:
         return {'nada': True}
@@ -808,10 +850,15 @@ class Manejador(SimpleHTTPRequestHandler):
                 with CERROJO:
                     self._json(publicar())
                 return
+            if self.path.startswith('/taller/limpiar'):
+                with CERROJO:
+                    self._json({'quitadas': limpiar_huerfanas()})
+                return
             if self.path.startswith('/taller/borrar'):
                 datos = self._cuerpo()
                 with CERROJO:
-                    borrar_ficha(datos.get('filename', ''))
+                    borrar_ficha(datos.get('filename', ''),
+                                 bool(datos.get('borrarArchivo')))
                 self._json({'ok': True})
                 return
             self._json({'error': 'ruta desconocida'}, 404)

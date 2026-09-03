@@ -137,6 +137,9 @@ input[type=text]:focus{outline:none;border-color:var(--roble)}
   font-size:.9rem;color:var(--ceniza);
 }
 .secundaria:hover{border-color:var(--roble);color:var(--sumi)}
+/* Quitar es destructivo: se distingue al acercarse, no antes */
+.quitar{margin-left:auto}
+.quitar:hover{border-color:var(--pino);color:var(--pino)}
 
 /* ── ficha técnica: lo que sólo se ve en el visor ── */
 .tecnica{
@@ -298,6 +301,27 @@ function pintarCuentas(){
 }
 
 function pintarAvisoImportar(){
+  /* Lo primero: fichas que nombran una foto que ya no está. Mientras las
+     haya, publicar dejaría la galería con huecos rotos. */
+  if(D.huerfanas && D.huerfanas.length){
+    avisar(`Hay <b>${D.huerfanas.length}</b> ficha(s) de fotografías que ya no ` +
+      `están en la carpeta: ${D.huerfanas.map(esc).join(', ')}. ` +
+      `Hasta que las quites no se puede publicar. ` +
+      `<button class="opcion" id="limpiar-huerfanas">Quitar esas fichas</button>`,
+      'aviso--error');
+    $('#limpiar-huerfanas').onclick = async (ev) => {
+      ev.target.textContent = 'Quitando…'; ev.target.disabled = true;
+      try{
+        const r = await pedir('/taller/limpiar', {});
+        await cargar();
+        avisar(`Quitadas <b>${r.quitadas.length}</b>: ${r.quitadas.map(esc).join(', ')}. ` +
+               `Ya puedes publicar.`);
+      }catch(e){
+        avisar(`No he podido quitarlas: <b>${esc(e.message)}</b>`, 'aviso--error');
+      }
+    };
+    return;
+  }
   if(!D.magick){
     avisar('No encuentro <b>ImageMagick</b>, así que no puedo convertir ' +
            'originales. Lo demás funciona igual.', 'aviso--error');
@@ -502,6 +526,9 @@ function pintar(){
           Guardar y siguiente
         </button>
         <button type="button" class="secundaria" id="saltar">Saltar</button>
+        ${foto.nueva ? '' :
+          '<button type="button" class="secundaria quitar" id="quitar" ' +
+          'title="Quita la fotografía del sitio. El original no se toca.">Quitar</button>'}
       </div>
       <p class="pista"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> para guardar</p>
     </form>`;
@@ -514,6 +541,7 @@ function pintar(){
   });
   refrescarTecnica(foto.filename, actual.camera, esDigital);
   $('#saltar').onclick = () => { i = (i + 1) % cola.length; actual = null; pintar(); };
+  if($('#quitar')) $('#quitar').onclick = () => quitar(foto);
   $('#lugar').oninput = e => { actual.place = e.target.value; };
   $('#lugar').focus();
   revisar();
@@ -597,6 +625,25 @@ function revisar(){
   $('#pista').textContent = falta.length
     ? 'Falta ' + falta.join(', ') + '.'
     : 'El tamaño y el número de ficha los pone el taller.';
+}
+
+/* Quitar una fotografía del sitio: se va su ficha y su WebP, pero el
+   original se queda. Es lo único irrecuperable, y del original siempre se
+   puede volver a sacar el WebP. */
+async function quitar(foto){
+  const nombre = foto.place || foto.city || foto.filename;
+  if(!confirm(`¿Quitar «${nombre}» del sitio?\n\n` +
+              `Se borran su ficha y ${foto.filename}.\n` +
+              `El original en fotos/_originales/ NO se toca.`)) return;
+  try{
+    await pedir('/taller/borrar', {filename: foto.filename, borrarArchivo: true});
+    actual = null;
+    if(i > 0) i--;
+    await cargar();
+    avisar(`Quitada <b>${esc(foto.filename)}</b>. El original sigue en su carpeta.`);
+  }catch(e){
+    avisar(`No he podido quitarla: <b>${esc(e.message)}</b>`, 'aviso--error');
+  }
 }
 
 async function guardar(){
