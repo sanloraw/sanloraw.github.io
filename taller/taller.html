@@ -221,7 +221,10 @@ kbd{
 /* Las que aún no tienen ficha: se ven a la primera entre las demás */
 .miniatura--pendiente{border-color:var(--roble);border-style:dashed}
 .miniatura--pendiente .miniatura__pie b{color:var(--pino)}
-.marca{
+/* Ojo con el nombre: .marca ya es el título del taller, ahí arriba.
+   Y el selector va por dentro del pie porque si no gana el `span`
+   genérico de ahí, que la dejaba gris y de otro cuerpo. */
+.miniatura__pie .miniatura__marca{
   align-self:flex-start;margin-top:.15rem;
   font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--pino);background:rgba(140,98,57,.1);
@@ -636,7 +639,7 @@ function pintarCuadricula(){
            style="--proporcion:${f.width || 4}/${f.height || 3}">
       <span class="miniatura__pie">
         <b>${esc(f.place || f.city || f.filename)}</b>
-        ${f.nueva ? '<span class="marca">sin ficha</span>'
+        ${f.nueva ? '<span class="miniatura__marca">sin ficha</span>'
                   : `<span>${esc(sitio || '—')}</span>`}
       </span>
     </button>`;
