@@ -866,16 +866,57 @@ class Manejador(SimpleHTTPRequestHandler):
             self._json({'error': str(e)}, 400)
 
 
+class Servidor(ThreadingHTTPServer):
+    """Un taller y sólo uno.
+
+    Windows deja que dos procesos se aten al mismo puerto si se pide
+    reutilizar la dirección, y entonces las peticiones caen en uno o en
+    otro sin criterio. Con dos talleres vivos habría dos procesos
+    escribiendo filtros.json, y el candado sólo protege dentro de un
+    proceso: el segundo arranque tiene que fallar, no colarse.
+    """
+    allow_reuse_address = False
+
+
 def main():
-    puerto = int(sys.argv[1]) if len(sys.argv) > 1 else 8123
+    argumentos = sys.argv[1:]
+    abrir = '--abrir' in argumentos
+    puertos = [int(a) for a in argumentos if a.isdigit()]
+    puerto = puertos[0] if puertos else 8123
+
     if not MAGICK:
-        print('  Aviso: no encuentro ImageMagick; no podré convertir '
+        print('  Aviso: no encuentro ImageMagick; no podre convertir '
               'originales.\n')
-    servidor = ThreadingHTTPServer(('127.0.0.1', puerto), Manejador)
-    print(f'  Sanlo.raw\n'
-          f'  sitio   http://localhost:{puerto}\n'
-          f'  taller  http://localhost:{puerto}/taller/\n\n'
-          f'  Ctrl+C para parar.\n')
+
+    try:
+        servidor = Servidor(('127.0.0.1', puerto), Manejador)
+    except OSError as e:
+        # Lo más probable con diferencia: ya hay un taller abierto.
+        # Sin tildes a proposito: la consola de Windows no siempre las
+        # admite, y un fallo al imprimir tumbaria el arranque justo
+        # cuando hay que explicar que ha pasado.
+        print(f'\n  No he podido abrir el puerto {puerto}.\n'
+              f'  Casi seguro que ya tienes el taller abierto en otra '
+              f'ventana:\n'
+              f'  mira si funciona http://localhost:{puerto}/taller/\n\n'
+              f'  (el error exacto fue: {e})\n')
+        input('  Pulsa Intro para cerrar. ')
+        return
+
+    print(f'\n  Sanlo.raw - el taller esta en marcha\n\n'
+          f'    taller  http://localhost:{puerto}/taller/\n'
+          f'    sitio   http://localhost:{puerto}\n\n'
+          f'  Deja esta ventana abierta mientras trabajas.\n'
+          f'  Para cerrarlo: Ctrl+C, o cierra la ventana.\n')
+
+    if abrir:
+        # en un hilo aparte: el navegador se abre cuando el servidor ya
+        # está escuchando, no antes, así no da "no se puede conectar"
+        import webbrowser
+        threading.Timer(
+            0.6, lambda: webbrowser.open(
+                f'http://localhost:{puerto}/taller/')).start()
+
     try:
         servidor.serve_forever()
     except KeyboardInterrupt:
