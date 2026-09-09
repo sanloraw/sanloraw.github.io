@@ -591,6 +591,10 @@ function alPulsar(ev){
       }
       actual[campo] = nuevo;
       if(campo === 'camera') actual.capture_type = D.formatoDe[nuevo] || actual.capture_type;
+      /* Al estrenar ciudad hay que soltar la zona igual que al elegirla
+         con su botón: si no, la de la ciudad anterior se queda pegada y
+         acabas con un barrio de Granada colgando de Córdoba. */
+      if(campo === 'city') actual.zone = '';
       pintarConservando();
     }
     return;

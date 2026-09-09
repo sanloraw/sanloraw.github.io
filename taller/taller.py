@@ -178,8 +178,12 @@ def exif(ruta):
         modelo = texto(0x0110, principal)
         marca = texto(0x010F, principal)
         if modelo:
-            # "Canon EOS 750D" → "Canon 750D"; "DSC-W730" → "Sony DSC-W730"
+            # "Canon EOS 750D" → "Canon 750D"; "DSC-W730" → "Sony DSC-W730".
+            # Los cuerpos Canon antiguos añaden " DIGITAL" al modelo, y con
+            # él la misma cámara entraba dos veces en la lista de filtros:
+            # "Canon 400D" y "Canon 400D DIGITAL".
             modelo = modelo.replace('EOS ', '')
+            modelo = re.sub(r'\s+DIGITAL\b', '', modelo, flags=re.I).strip()
             if marca and not modelo.lower().startswith(marca.split()[0].lower()):
                 modelo = f'{marca.split()[0].title()} {modelo}'
             datos['camara'] = modelo

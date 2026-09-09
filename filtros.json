@@ -1801,7 +1801,6 @@
       "height": 1414,
       "place": "",
       "city": "Córdoba",
-      "zone": "Sierra Nevada",
       "camera": "Canon 750D",
       "capture_type": "digital",
       "color_mode": "color"
@@ -2120,7 +2119,7 @@
       "height": 1333,
       "place": "",
       "city": "Madrid",
-      "camera": "Canon 400D DIGITAL",
+      "camera": "Canon 400D",
       "capture_type": "digital",
       "color_mode": "color",
       "lens": "EF-S 18-55 mm",
