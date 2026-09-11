@@ -2546,6 +2546,20 @@
       "iso": 100,
       "focal_35": 80,
       "year": "2017"
+    },
+    {
+      "id": 164,
+      "filename": "433916.webp",
+      "width": 1818,
+      "height": 1228,
+      "place": "",
+      "city": "Málaga",
+      "camera": "Olympus Superzoom 70G",
+      "capture_type": "analogico",
+      "color_mode": "color",
+      "iso": 200,
+      "film": "Fujicolor",
+      "year": "2022"
     }
   ]
 }
