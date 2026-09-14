@@ -678,7 +678,13 @@ def limpiar_huerfanas():
 # Sólo esto se sube desde el taller. El código del sitio y del propio
 # taller se queda fuera a propósito: aquí se publica contenido, y un botón
 # que arrastrase cambios de código a medias sería una trampa.
-PUBLICABLE = ['filtros.json', 'index.html', 'fotos']
+PUBLICABLE = ['filtros.json', 'index.html', 'fotos', 'instagram']
+
+# 'instagram' está aquí por una razón que no es estética: la API de
+# Instagram no acepta que le subas un archivo, sólo una dirección
+# pública. Los montajes tienen que estar en la web ANTES de poder
+# publicarlos. Los originales y el token se quedan fuera por
+# .gitignore, así que sólo suben los JPEG montados y posts.json.
 
 
 def _git(*args, timeout=90):
@@ -754,6 +760,21 @@ def publicar():
     if r.returncode:
         raise RuntimeError('git commit: ' + (r.stderr or r.stdout)[:300])
 
+    # Traer antes de subir. Desde que existe la cola de Instagram, GitHub
+    # tiene commits que no salen de aquí —los registros que deja la Action
+    # al publicar— y un push sin traerlos antes lo rechazaría. --autostash
+    # aparta lo que tengas a medias fuera de lo publicable y lo devuelve.
+    # No choca con la Action: ella sólo escribe en instagram/publicados/.
+    r = _git('pull', '--rebase', '--autostash', 'origin', 'main', timeout=180)
+    if r.returncode:
+        _git('rebase', '--abort')
+        corto = _git('rev-parse', '--short', 'HEAD').stdout.strip()
+        raise RuntimeError(
+            'He guardado tu trabajo (' + corto + ') pero en GitHub hay '
+            'cambios que chocan con los tuyos y no lo he subido. No se ha '
+            'perdido nada; avísame. Detalle: '
+            + (r.stderr or r.stdout).strip()[:300])
+
     corto = _git('rev-parse', '--short', 'HEAD').stdout.strip()
 
     r = _git('push', 'origin', 'HEAD', timeout=180)
@@ -765,6 +786,18 @@ def publicar():
 
     return {'commit': corto, 'archivos': len(archivos),
             'mensaje': _mensaje(archivos).splitlines()[0]}
+
+
+# ─────────────────────────────────────────────────────────────────────
+#  Instagram
+# ─────────────────────────────────────────────────────────────────────
+
+def _ig():
+    """Se importa aquí dentro y no arriba a propósito: instagram.py importa
+    este módulo, y hacerlo al revés desde la primera línea sería una
+    importación circular. Cuando esto se llama, taller ya está cargado."""
+    import instagram
+    return instagram
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -812,6 +845,14 @@ class Manejador(SimpleHTTPRequestHandler):
                 self._json({'error': str(e)}, 500)
             return
 
+        if ruta.startswith('/taller/ig/datos'):
+            try:
+                with CERROJO:
+                    self._json(_ig().estado())
+            except Exception as e:
+                self._json({'error': str(e)}, 500)
+            return
+
         # Qué diría el original de su disparo con la cámara que le pongas.
         # Va aparte de /datos porque cambia al tocar la cámara: el factor
         # de recorte depende de ella.
@@ -839,6 +880,39 @@ class Manejador(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         try:
+            if self.path.startswith('/taller/ig/'):
+                accion = self.path.split('?', 1)[0].rsplit('/', 1)[-1]
+                ig = _ig()
+                with CERROJO:
+                    if accion == 'importar':
+                        montados, fallos = ig.importar()
+                        self._json({'montados': montados, 'fallos': fallos})
+                    elif accion == 'guardar':
+                        self._json(ig.actualizar(self._cuerpo()))
+                    elif accion == 'borrar':
+                        self._json({'quitada': ig.borrar(self._cuerpo()['id'])})
+                    elif accion == 'publicar':
+                        self._json({'post': ig.publicar_post(self._cuerpo()['id'])})
+                    elif accion == 'renovar':
+                        dias = ig.renovar_token()
+                        # Renovar sin avisar a GitHub dejaría a la Action con
+                        # el token viejo hasta que caducara. Si está gh, se
+                        # manda la copia en el mismo gesto.
+                        aviso = None
+                        if ig._gh():
+                            try:
+                                ig.sincronizar_github()
+                            except Exception as e:
+                                aviso = str(e)
+                        self._json({'dias': dias, 'github': ig.github_al_dia(),
+                                    'avisoGithub': aviso})
+                    elif accion == 'sincronizar':
+                        ig.sincronizar_github()
+                        self._json({'ok': True})
+                    else:
+                        self._json({'error': 'no sé hacer eso'}, 404)
+                return
+
             if self.path.startswith('/taller/importar'):
                 with CERROJO:
                     hechas, fallos = importar()

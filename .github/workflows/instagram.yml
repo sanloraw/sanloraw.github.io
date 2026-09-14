@@ -1,0 +1,66 @@
+# La cola de Instagram, con el ordenador apagado.
+#
+# Cada media hora mira instagram/posts.json y publica UNA de las que marcaste
+# como listas y cuya fecha ya pasó. Una por pasada y no todas de golpe: si
+# se acumulan, salen con aire entre ellas en vez de juntas en el perfil.
+#
+# Una vez al día, además, mira cuánto le queda al token. Si es una semana o
+# menos, la pasada falla a propósito: es la forma de que GitHub te mande un
+# correo. Se renueva desde el taller, que le manda la copia a GitHub.
+#
+# Sin secretos configurados no hace nada y termina en verde, así que tener
+# este archivo en el repositorio no molesta hasta que conectes la cola.
+
+name: Cola de Instagram
+
+on:
+  schedule:
+    # Minutos 7 y 37 y no en punto: a las horas en punto GitHub va cargado
+    # y las pasadas se retrasan más.
+    - cron: '7,37 * * * *'
+    - cron: '17 8 * * *'          # la revisión diaria del token (10:17 en Madrid)
+  workflow_dispatch:
+    inputs:
+      ensayo:
+        description: 'Ensayo: dice qué publicaría, sin publicar nada'
+        type: boolean
+        default: true
+
+# Escribe en el repositorio para dejar apuntado lo que publica, en
+# instagram/publicados/. Nada más.
+permissions:
+  contents: write
+
+# Nunca dos pasadas a la vez: la segunda espera a que acabe la primera.
+concurrency:
+  group: cola-instagram
+  cancel-in-progress: false
+
+jobs:
+  cola:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Identidad para dejar apuntado lo publicado
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Revisar el token
+        if: github.event.schedule == '17 8 * * *'
+        env:
+          IG_TOKEN_CADUCA: ${{ vars.IG_TOKEN_CADUCA }}
+        run: python3 taller/instagram.py caducidad
+
+      - name: Publicar lo que toque
+        if: github.event.schedule != '17 8 * * *'
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_TOKEN_CADUCA: ${{ vars.IG_TOKEN_CADUCA }}
+          IG_HOST: ${{ vars.IG_HOST }}
+          IG_VERSION: ${{ vars.IG_VERSION }}
+          ENSAYO: ${{ inputs.ensayo && '--ensayo' || '' }}
+        run: python3 taller/instagram.py cola $ENSAYO

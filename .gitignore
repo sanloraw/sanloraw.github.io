@@ -5,6 +5,18 @@ fotos/_sin-clasificar/
 # Se quedan aquí como copia de trabajo, fuera del repositorio.
 fotos/_originales/
 
+# Lo mismo para Instagram: los originales se quedan en casa y al
+# repositorio sólo suben los montajes, que son los que Instagram lee
+# por su dirección pública.
+instagram/_originales/
+
+# El token de Meta. Esto no sale de este ordenador jamás.
+instagram/.credenciales.json
+
 # Lo que Python deja al ejecutar el taller
 __pycache__/
 *.pyc
+
+# Las escrituras van a un .tmp y luego lo sustituyen de golpe. Si algo se
+# corta a medias queda el .tmp suelto, y el botón Publicar se lo llevaría.
+*.tmp

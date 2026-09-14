@@ -59,13 +59,15 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
 .modo[aria-pressed="true"]{background:var(--sumi);color:var(--luz);border-color:var(--sumi)}
 
 /* ── avisos ── */
+/* Texto corrido y no fila flexible: en flex cada trozo en negrita era una
+   pieza aparte con su hueco, y un aviso largo se leía a saltos. */
 .aviso{
-  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
   padding:.85rem clamp(1rem,3vw,2rem);
   background:rgba(166,124,82,.09);border-bottom:1px solid var(--lino);
-  font-size:.88rem;color:var(--ceniza);
+  font-size:.88rem;line-height:1.7;color:var(--ceniza);
 }
 .aviso b{color:var(--sumi);font-weight:500}
+.aviso .opcion{margin-left:.5rem}
 .aviso--error{background:rgba(140,98,57,.14)}
 
 /* ── cuerpo ── */
@@ -179,6 +181,62 @@ kbd{
   color:var(--ceniza);
 }
 
+/* ── Instagram: la cola de publicaciones ── */
+.escena--ig{background:var(--sumi)}
+.escena--ig img{box-shadow:0 2px 40px rgba(0,0,0,.5)}
+
+textarea{
+  font:inherit;font-size:.92rem;line-height:1.55;color:var(--sumi);
+  background:var(--washi);border:1px solid var(--lino);border-radius:2px;
+  padding:.5rem .7rem;width:100%;resize:vertical;min-height:4.5rem;
+}
+textarea::placeholder{color:var(--niebla)}
+textarea:focus{outline:none;border-color:var(--roble)}
+
+/* Cada etiqueta se quita pulsando su aspa: son pocas y se eligen a mano */
+.etiqueta{
+  display:inline-flex;align-items:center;gap:.35rem;
+  font-size:.8rem;padding:.28rem .5rem .28rem .6rem;
+  border:1px solid var(--lino);border-radius:2px;color:var(--ceniza);
+}
+.etiqueta b{font-weight:400;color:var(--sumi)}
+.etiqueta span{color:var(--niebla);font-size:.9em}
+.etiqueta:hover{border-color:var(--pino)}
+.etiqueta:hover span{color:var(--pino)}
+
+/* El pie tal y como va a salir publicado, para leerlo antes de soltarlo */
+.previo{
+  background:var(--washi);border:1px solid var(--lino);border-radius:2px;
+  padding:.6rem .75rem;font-size:.82rem;line-height:1.6;color:var(--ceniza);
+  white-space:pre-wrap;word-break:break-word;
+}
+.previo:empty::before{content:'Sin texto todavía.';color:var(--niebla);font-style:italic}
+
+.sello{
+  font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:.1rem .4rem;border-radius:2px;font-weight:500;
+}
+.sello--borrador{color:var(--niebla);background:var(--tatami)}
+.sello--listo{color:var(--pino);background:rgba(140,98,57,.12)}
+.sello--publicado{color:var(--luz);background:var(--sumi)}
+.sello--publicando{color:var(--sumi);background:var(--lino)}
+.sello--error{color:var(--luz);background:var(--pino)}
+
+/* Lo que le pasó a esta publicación en concreto: un fallo o una reserva
+   que se quedó a medias. Va pegado a ella, no en la franja de arriba. */
+.aviso-post{
+  font-size:.8rem;line-height:1.5;color:var(--sumi);
+  background:rgba(140,98,57,.12);border-left:2px solid var(--pino);
+  padding:.5rem .7rem;border-radius:0 2px 2px 0;
+}
+
+input[type=datetime-local]{
+  font:inherit;font-size:.88rem;color:var(--sumi);
+  background:var(--washi);border:1px solid var(--lino);border-radius:2px;
+  padding:.35rem .6rem;
+}
+input[type=datetime-local]:focus{outline:none;border-color:var(--roble)}
+
 /* ── vacío ── */
 .vacio{
   grid-column:1 / -1;
@@ -244,6 +302,7 @@ kbd{
     <button class="modo" id="modo-pendientes" aria-pressed="true">Sin etiquetar</button>
     <button class="modo" id="modo-cuadricula" aria-pressed="false">Cuadrícula</button>
     <button class="modo" id="modo-todas" aria-pressed="false">Todas</button>
+    <button class="modo" id="modo-instagram" aria-pressed="false">Instagram</button>
   </div>
   <button class="publicar" id="publicar" hidden></button>
 </header>
@@ -393,6 +452,7 @@ let actual = null;
 function pintar(){
   const t = $('#taller');
   if(modo === 'cuadricula') return pintarCuadricula();
+  if(modo === 'instagram') return pintarIG();
   if(!cola.length){
     t.innerHTML = `<div class="vacio">
       <h2>${modo === 'pendientes' ? 'Nada que etiquetar' : 'Todavía no hay fichas'}</h2>
@@ -715,16 +775,20 @@ function abrirDesdeCuadricula(foto){
 $('#modo-pendientes').onclick = () => cambiarModo('pendientes');
 $('#modo-cuadricula').onclick = () => cambiarModo('cuadricula');
 $('#modo-todas').onclick = () => cambiarModo('todas');
+$('#modo-instagram').onclick = () => cambiarModo('instagram');
 
 function marcarModo(){
   $('#modo-pendientes').setAttribute('aria-pressed', modo === 'pendientes');
   $('#modo-cuadricula').setAttribute('aria-pressed', modo === 'cuadricula');
   $('#modo-todas').setAttribute('aria-pressed', modo === 'todas');
+  $('#modo-instagram').setAttribute('aria-pressed', modo === 'instagram');
 }
 
 function cambiarModo(m){
   modo = m; i = 0; actual = null;
   marcarModo();
+  if(m === 'instagram'){ refrescarIG(); return; }
+  avisar('');
   rehacerCola(); pintar();
 }
 
@@ -767,6 +831,363 @@ document.addEventListener('keydown', ev => {
     if($('#guardar') && !$('#guardar').disabled) guardar();
   }
 });
+
+
+/* ───────────────────────── Instagram ─────────────────────────
+   La misma mecánica que etiquetar: una publicación delante, su ficha al
+   lado. Lo que no está en ninguna parte —tu línea— es lo único que hay
+   que escribir; ciudad, año, hashtags y alternativo vienen puestos.
+   El pie de la imagen va grabado dentro del JPEG, así que tocar ciudad o
+   año rehace el montaje al guardar. */
+
+let IG = null;         // estado del servidor
+let j = 0;             // en qué publicación estamos
+let post = null;       // lo que llevas editado sin guardar
+
+async function refrescarIG(){
+  try{
+    IG = await pedir('/taller/ig/datos');
+  }catch(e){
+    avisar(`No he podido leer la cola: <b>${esc(e.message)}</b>`, 'aviso--error');
+    return;
+  }
+  if(j >= IG.posts.length) j = Math.max(0, IG.posts.length - 1);
+  pintarIG();
+}
+
+function avisosIG(){
+  if(IG.sinMontar.length){
+    avisar(`Hay <b>${IG.sinMontar.length}</b> foto(s) en ` +
+      `<b>instagram/_originales/</b> sin montar. ` +
+      `<button class="opcion" id="ig-montar">Montar</button>`);
+    $('#ig-montar').onclick = async ev => {
+      ev.target.textContent = 'Montando…'; ev.target.disabled = true;
+      try{
+        const r = await pedir('/taller/ig/importar', {});
+        post = null; await refrescarIG();
+        if(r.fallos.length)
+          avisar(`No pude con ${r.fallos.length}: ` +
+                 r.fallos.map(f => esc(f.archivo)).join(', '), 'aviso--error');
+      }catch(e){
+        avisar(`Fallo al montar: <b>${esc(e.message)}</b>`, 'aviso--error');
+      }
+    };
+    return;
+  }
+  if(!IG.credenciales){
+    avisar('Falta <b>instagram/.credenciales.json</b> con el token y el id ' +
+           'de la cuenta. Hasta entonces se puede montar y preparar, pero ' +
+           'no publicar.');
+    return;
+  }
+  if(IG.diasToken !== null && IG.diasToken < 12){
+    avisar(`El token caduca en <b>${IG.diasToken} día(s)</b>. ` +
+      `<button class="opcion" id="ig-renovar">Renovar</button>`,
+      IG.diasToken < 4 ? 'aviso--error' : '');
+    $('#ig-renovar').onclick = async ev => {
+      ev.target.textContent = 'Renovando…'; ev.target.disabled = true;
+      try{
+        const r = await pedir('/taller/ig/renovar', {});
+        await refrescarIG();
+        avisar(`Renovado: <b>${r.dias}</b> días por delante.` +
+          (r.github ? ' GitHub ya tiene el nuevo.'
+            : r.avisoGithub ? ` Pero GitHub no: ${esc(r.avisoGithub)}`
+            : ' Falta mandárselo a GitHub para que la cola siga.'),
+          r.github ? '' : 'aviso--error');
+      }catch(e){
+        avisar(`No he podido renovar: <b>${esc(e.message)}</b>`, 'aviso--error');
+      }
+    };
+    return;
+  }
+  /* La cola automática: sólo se habla de ella si hay algo con fecha. Sin
+     eso, avisar de GitHub sería ruido. */
+  const conFecha = IG.posts.some(p => p.estado === 'listo' && p.programado);
+  if(conFecha && !IG.github.alDia){
+    if(!IG.github.gh){
+      avisar('Tienes publicaciones con fecha, pero <b>GitHub no tiene el ' +
+        'token</b> y no las podrá sacar. Para mandárselo hace falta, una sola ' +
+        'vez, su herramienta: en una terminal, <b>winget install --id ' +
+        'GitHub.cli</b> y después <b>gh auth login</b>. Luego vuelve aquí.',
+        'aviso--error');
+      return;
+    }
+    avisar('Tienes publicaciones con fecha, pero <b>GitHub no tiene el token ' +
+      'de ahora</b>. Sin él no las puede sacar con el ordenador apagado. ' +
+      '<button class="opcion" id="ig-github">Mandárselo a GitHub</button>',
+      'aviso--error');
+    $('#ig-github').onclick = async ev => {
+      ev.target.textContent = 'Mandando…'; ev.target.disabled = true;
+      try{
+        await pedir('/taller/ig/sincronizar', {});
+        await refrescarIG();
+        avisar('Hecho: GitHub tiene el token y publicará lo que tenga fecha.');
+      }catch(e){
+        avisar(`GitHub no lo ha guardado: <b>${esc(e.message)}</b>`, 'aviso--error');
+      }
+    };
+    return;
+  }
+  avisar('');
+}
+
+/* Fechas: se guardan en UTC y se enseñan en tu hora. El campo del
+   navegador trabaja en hora local sin zona, así que se convierte al
+   entrar y al salir. */
+const aCampo = iso => {
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  const n = x => String(x).padStart(2, '0');
+  return `${d.getFullYear()}-${n(d.getMonth()+1)}-${n(d.getDate())}T${n(d.getHours())}:${n(d.getMinutes())}`;
+};
+const deCampo = v => v ? new Date(v).toISOString() : '';
+const legible = iso => new Date(iso).toLocaleString('es-ES',
+  {weekday:'long', day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'});
+
+function pintarIG(){
+  avisosIG();
+  const t = $('#taller');
+  if(!IG.posts.length){
+    t.innerHTML = `<div class="vacio">
+      <h2>La cola está vacía</h2>
+      <p>Deja las fotografías que quieras publicar en
+         <b>instagram/_originales/</b> y vuelve aquí a montarlas.</p>
+    </div>`;
+    return;
+  }
+
+  const p = IG.posts[j];
+  if(!post || post.id !== p.id) post = JSON.parse(JSON.stringify(p));
+
+  /* Estados. borrador y listo los decides tú; los otros tres los apunta
+     quien publica. «En curso» es una reserva reciente; si pasa de su plazo
+     sin cerrarse, es que quien la tenía se cayó a medias. */
+  const publicado = post.estado === 'publicado';
+  const reservadaHace = post.estado === 'publicando' && post.publicado && post.publicado.fecha
+    ? (new Date(IG.ahora) - new Date(post.publicado.fecha)) / 60000 : null;
+  const enCurso = reservadaHace !== null && reservadaHace < IG.reservaCaducaMin;
+  const colgada = post.estado === 'publicando' && !enCurso;
+  const fallida = post.estado === 'error';
+  const bloqueada = publicado || enCurso;
+  const tieneRegistro = publicado || enCurso || colgada || fallida;
+  const vencida = post.estado === 'listo' && post.programado
+    && new Date(post.programado) <= new Date(IG.ahora);
+  const enLaWeb = !IG.sinSubir.includes(post.montaje);
+  const texto = [ (post.linea || '').trim(),
+                  (post.hashtags || []).join(' ') ].filter(Boolean).join('\n\n');
+
+  const campo = (clave, rotulo, ejemplo, ancho) =>
+    `<label class="${ancho ? 'ancho' : ''}">${rotulo}
+       <input type="text" data-ig="${clave}" value="${esc(post[clave] ?? '')}"
+              placeholder="${esc(ejemplo)}" autocomplete="off"></label>`;
+
+  t.innerHTML = `
+    <div class="escena escena--ig">
+      <img src="/instagram/${encodeURIComponent(post.montaje)}?v=${Date.now()}" alt="">
+    </div>
+    <form class="panel" id="panel-ig">
+      <p class="archivo">
+        <b>${esc(post.montaje)}</b>
+        <span class="sello sello--${esc(post.estado)}">${esc(post.estado)}</span><br>
+        ${j + 1} de ${IG.posts.length} · ${esc(post.orientacion)}
+        ${publicado ? ' · publicada el ' + esc(legible(post.publicado.fecha))
+          + (post.publicado.quien === 'github' ? ' por GitHub' : '') : ''}
+        ${!tieneRegistro && post.programado ? ' · sale el ' + esc(legible(post.programado)) : ''}
+      </p>
+      ${fallida ? `<p class="aviso-post">No salió: ${esc(post.error || 'sin detalle')}</p>` : ''}
+      ${colgada ? `<p class="aviso-post">Se quedó a medias el
+         ${esc(legible(post.publicado.fecha))}. Mira en Instagram si llegó a salir:
+         si no salió, pulsa «Publicar ahora»; si salió, déjala así.</p>` : ''}
+
+      <div class="grupo">
+        <label class="grupo__rotulo" for="ig-linea">Tu línea
+          <span>— lo único que no puede escribir nadie más</span></label>
+        <textarea id="ig-linea" placeholder="Lo que quieras contar de esta fotografía."
+                  ${bloqueada ? 'disabled' : ''}>${esc(post.linea || '')}</textarea>
+      </div>
+
+      <div class="grupo">
+        <span class="grupo__rotulo">Hashtags <span>— pocas y precisas</span></span>
+        <div class="fichas" id="ig-etiquetas">
+          ${(post.hashtags || []).map(h =>
+            `<button type="button" class="etiqueta" data-quitar="${esc(h)}">
+               <b>${esc(h)}</b><span>×</span></button>`).join('')}
+          <button type="button" class="opcion opcion--otra" id="ig-otra">otra…</button>
+          <button type="button" class="opcion opcion--otra" id="ig-rehacer">proponer de nuevo</button>
+        </div>
+      </div>
+
+      <div class="grupo">
+        <span class="grupo__rotulo">Texto alternativo <span>— esto sí lo lee el buscador</span></span>
+        <input type="text" data-ig="alt" value="${esc(post.alt || '')}"
+               placeholder="Qué se ve en la fotografía." autocomplete="off">
+      </div>
+
+      <div class="tecnica">
+        <div class="tecnica__cabecera">
+          <b>Pie grabado</b>
+          <span class="tecnica__origen">va dentro de la imagen</span>
+        </div>
+        <div class="aMano">
+          ${campo('city', 'Ciudad', 'Madrid')}
+          ${campo('year', 'Año', '2025')}
+          ${campo('zone', 'Zona', 'Barajas', true)}
+        </div>
+        <p class="pista">Cambiar ciudad o año rehace el montaje al guardar:
+           el pie está escrito dentro del JPEG, no en el texto del post.</p>
+      </div>
+
+      <div class="grupo">
+        <span class="grupo__rotulo">Así va a salir</span>
+        <p class="previo">${esc(texto)}</p>
+      </div>
+
+      ${tieneRegistro ? '' : `
+      <div class="grupo">
+        <span class="grupo__rotulo">Estado</span>
+        <div class="fichas" data-grupo="estado">
+          ${['borrador', 'listo'].map(v =>
+            `<button type="button" class="opcion" data-estado="${v}"
+               aria-pressed="${post.estado === v}">${v === 'listo' ? 'Listo para publicar' : 'Borrador'}</button>`
+          ).join('')}
+        </div>
+      </div>
+      ${post.estado !== 'listo' ? '' : `
+      <div class="grupo">
+        <label class="grupo__rotulo" for="ig-cuando">Cuándo
+          <span>— con fecha la saca GitHub, aunque tengas el ordenador apagado</span></label>
+        <div class="fichas">
+          <input type="datetime-local" id="ig-cuando" value="${aCampo(post.programado)}">
+          ${post.programado ? '<button type="button" class="opcion opcion--otra" id="ig-sinfecha">sin fecha</button>' : ''}
+        </div>
+        <p class="pista">${
+          !post.programado ? 'Sin fecha sólo sale con «Publicar ahora».'
+          : vencida && !IG.github.alDia ? 'Ya tenía que haber salido, pero GitHub no tiene el token: mira el aviso de arriba.'
+          : vencida ? 'Ya le toca: sale en la próxima media hora, más o menos. Si hay varias vencidas, salen de una en una.'
+          : `Saldrá el ${esc(legible(post.programado))}, con un margen de media hora.`}</p>
+      </div>`}`}
+
+      <p class="pista" id="ig-pista">${
+        publicado ? 'Ya está publicada. Editar aquí no cambia lo que hay en Instagram.'
+        : enCurso ? 'La está publicando ' + (post.publicado.quien === 'github' ? 'GitHub' : 'el taller') + ' ahora mismo.'
+        : !enLaWeb ? 'El montaje todavía no está en la web. Publica primero al repositorio con el botón de arriba: Instagram lee la imagen por su dirección pública.'
+        : !IG.credenciales ? 'Sin credenciales no puedo publicar desde aquí.'
+        : !(post.linea || '').trim() ? 'Escribe tu línea antes de publicar.'
+        : 'Todo listo. Al publicar se sube tal y como lo ves.'}</p>
+
+      <div class="acciones">
+        <button type="submit" class="principal" id="ig-guardar"
+          ${bloqueada ? 'disabled' : ''}>Guardar</button>
+        <button type="button" class="secundaria" id="ig-publicar"
+          ${bloqueada || !enLaWeb || !IG.credenciales || !(post.linea || '').trim()
+            ? 'disabled' : ''}>Publicar ahora</button>
+        <button type="button" class="secundaria quitar" id="ig-quitar"
+          title="Saca la publicación de la cola. El original no se toca.">Quitar</button>
+      </div>
+      <div class="acciones" style="margin-top:0">
+        <button type="button" class="secundaria" id="ig-anterior"
+          ${j === 0 ? 'disabled' : ''}>Anterior</button>
+        <button type="button" class="secundaria" id="ig-siguiente"
+          ${j >= IG.posts.length - 1 ? 'disabled' : ''}>Siguiente</button>
+      </div>
+    </form>`;
+
+  const redibujar = () => { pintarIG(); };
+
+  $('#ig-linea').oninput = e => {
+    post.linea = e.target.value;
+    $('.previo').textContent =
+      [post.linea.trim(), (post.hashtags || []).join(' ')].filter(Boolean).join('\n\n');
+  };
+  document.querySelectorAll('[data-ig]').forEach(inp => {
+    inp.oninput = e => { post[e.target.dataset.ig] = e.target.value; };
+  });
+  document.querySelectorAll('[data-quitar]').forEach(b => {
+    b.onclick = () => {
+      post.hashtags = post.hashtags.filter(h => h !== b.dataset.quitar);
+      redibujar();
+    };
+  });
+  $('#ig-otra').onclick = () => {
+    const v = prompt('¿Qué etiqueta?');
+    if(v && v.trim()){
+      const limpia = v.trim().replace(/^#*/, '#');
+      if(!post.hashtags.includes(limpia)) post.hashtags.push(limpia);
+      redibujar();
+    }
+  };
+  $('#ig-rehacer').onclick = () => {
+    const original = IG.posts.find(x => x.id === post.id);
+    post.hashtags = [...original.hashtags];
+    redibujar();
+  };
+  document.querySelectorAll('[data-estado]').forEach(b => {
+    b.onclick = () => { post.estado = b.dataset.estado; redibujar(); };
+  });
+  if($('#ig-cuando')) $('#ig-cuando').onchange = e => {
+    post.programado = deCampo(e.target.value);
+    redibujar();
+  };
+  if($('#ig-sinfecha')) $('#ig-sinfecha').onclick = () => {
+    post.programado = '';
+    redibujar();
+  };
+  $('#ig-anterior').onclick = () => { if(j > 0){ j--; post = null; pintarIG(); } };
+  $('#ig-siguiente').onclick = () => {
+    if(j < IG.posts.length - 1){ j++; post = null; pintarIG(); }
+  };
+  $('#panel-ig').addEventListener('submit', ev => { ev.preventDefault(); guardarIG(); });
+  $('#ig-publicar').onclick = publicarIG;
+  $('#ig-quitar').onclick = quitarIG;
+}
+
+async function guardarIG(){
+  const b = $('#ig-guardar');
+  b.disabled = true; b.textContent = 'Guardando…';
+  try{
+    const r = await pedir('/taller/ig/guardar', post);
+    post = null;
+    await refrescarIG();
+    if(r.rehecho) avisar('Guardado. He rehecho el montaje porque cambió el pie.');
+  }catch(e){
+    avisar(`No se ha podido guardar: <b>${esc(e.message)}</b>`, 'aviso--error');
+    b.disabled = false; b.textContent = 'Guardar';
+  }
+}
+
+async function publicarIG(){
+  if(!confirm(`¿Publicar «${post.montaje}» en Instagram?\n\n` +
+              `Se sube tal y como la ves. Esto no se puede deshacer ` +
+              `desde aquí: habría que borrarla en la aplicación.`)) return;
+  const b = $('#ig-publicar');
+  b.disabled = true; b.textContent = 'Publicando…';
+  try{
+    const r = await pedir('/taller/ig/publicar', {id: post.id});
+    post = null;
+    await refrescarIG();
+    if(r.post && r.post.avisoGit) avisar(esc(r.post.avisoGit), 'aviso--error');
+    else avisar('Publicada en Instagram, y apuntado en GitHub para que la ' +
+                'cola no la repita.');
+  }catch(e){
+    avisar(`No se ha podido publicar: <b>${esc(e.message)}</b>`, 'aviso--error');
+    b.disabled = false; b.textContent = 'Publicar ahora';
+  }
+}
+
+async function quitarIG(){
+  if(!confirm(`¿Sacar «${post.montaje}» de la cola?\n\n` +
+              `Se borra el montaje. El original en instagram/_originales ` +
+              `NO se toca.`)) return;
+  try{
+    await pedir('/taller/ig/borrar', {id: post.id});
+    post = null;
+    if(j > 0) j--;
+    await refrescarIG();
+  }catch(e){
+    avisar(`No he podido quitarla: <b>${esc(e.message)}</b>`, 'aviso--error');
+  }
+}
 
 cargar();
 </script>
