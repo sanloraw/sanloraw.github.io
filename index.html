@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sanlo — Fotografía de calle</title>
+<title>Santo Lorenzo — Fotografía de calle</title>
 
 <!-- Icono: la ese sobre sumi. Fondo oscuro para que se recorte igual de
      bien en pestañas claras y oscuras. -->
@@ -114,7 +114,9 @@ a{color:inherit;text-decoration:none}
 }
 .marca em{
   font-style:italic;color:var(--roble);
-  font-size:.34em;letter-spacing:0;vertical-align:super;
+  font-size:.34em;letter-spacing:0;
+  /* A la derecha de «Santo», como iba el «.raw», pero bajo su línea */
+  position:relative;top:.35em;margin-left:.05em;
 }
 .apertura__linea{
   width:1px;height:0;background:var(--lino);
@@ -992,7 +994,7 @@ a{color:inherit;text-decoration:none}
 
 <!-- APERTURA -->
 <header class="apertura">
-  <h1 class="marca">Sanlo<em>.raw</em></h1>
+  <h1 class="marca">Santo<em>Lorenzo</em></h1>
   <div class="apertura__linea" aria-hidden="true"></div>
   <p class="apertura__meta">Fotografía de calle · Madrid</p>
   <div class="indicador" aria-hidden="true"></div>
@@ -1003,8 +1005,8 @@ a{color:inherit;text-decoration:none}
   <!-- BARRA LATERAL -->
   <aside class="barra">
     <div class="barra__cabecera">
-      <button class="barra__marca" type="button" id="volver-inicio" aria-label="Sanlo — volver a la portada">
-        <span aria-hidden="true">S</span><span aria-hidden="true">A</span><span aria-hidden="true">N</span><span aria-hidden="true">L</span><span aria-hidden="true">O</span>
+      <button class="barra__marca" type="button" id="volver-inicio" aria-label="Santo Lorenzo — volver a la portada">
+        <span aria-hidden="true">S</span><span aria-hidden="true">A</span><span aria-hidden="true">N</span><span aria-hidden="true">T</span><span aria-hidden="true">O</span>
       </button>
     </div>
 
@@ -1293,9 +1295,9 @@ a{color:inherit;text-decoration:none}
       <div class="barra__social">
         <a href="https://www.instagram.com/sanlo.raw/"
            target="_blank" rel="noopener noreferrer"
-           aria-label="Instagram de Sanlo (se abre en otra pestaña)">IG</a>
+           aria-label="Instagram de Santo Lorenzo (se abre en otra pestaña)">IG</a>
       </div>
-      <span class="barra__copy">© 2026 Sanlo</span>
+      <span class="barra__copy">© 2026 Santo Lorenzo</span>
     </div>
   </aside>
 
@@ -1808,7 +1810,7 @@ a{color:inherit;text-decoration:none}
 
   limpiar.addEventListener('click', quitarFiltros);
 
-  /* El nombre SANLO devuelve a la portada: quita los filtros y sube arriba */
+  /* El nombre SANTO devuelve a la portada: quita los filtros y sube arriba */
   const volverInicio = document.getElementById('volver-inicio');
   volverInicio.addEventListener('click', () => {
     const habiaFiltros = hayFiltros();
