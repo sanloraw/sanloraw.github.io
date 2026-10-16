@@ -114,7 +114,8 @@ a{color:inherit;text-decoration:none}
 }
 .marca em{
   font-style:italic;color:var(--roble);
-  font-size:.34em;letter-spacing:0;vertical-align:super;
+  font-size:.34em;letter-spacing:0;
+  display:block;margin-top:.15em;
 }
 .apertura__linea{
   width:1px;height:0;background:var(--lino);
@@ -992,7 +993,7 @@ a{color:inherit;text-decoration:none}
 
 <!-- APERTURA -->
 <header class="apertura">
-  <h1 class="marca">Santo<em> Lorenzo</em></h1>
+  <h1 class="marca">Santo<em>Lorenzo</em></h1>
   <div class="apertura__linea" aria-hidden="true"></div>
   <p class="apertura__meta">Fotografía de calle · Madrid</p>
   <div class="indicador" aria-hidden="true"></div>
@@ -1004,7 +1005,7 @@ a{color:inherit;text-decoration:none}
   <aside class="barra">
     <div class="barra__cabecera">
       <button class="barra__marca" type="button" id="volver-inicio" aria-label="Santo Lorenzo — volver a la portada">
-        <span aria-hidden="true">SANTO</span><span aria-hidden="true">LORENZO</span>
+        <span aria-hidden="true">S</span><span aria-hidden="true">A</span><span aria-hidden="true">N</span><span aria-hidden="true">T</span><span aria-hidden="true">O</span>
       </button>
     </div>
 
@@ -1808,7 +1809,7 @@ a{color:inherit;text-decoration:none}
 
   limpiar.addEventListener('click', quitarFiltros);
 
-  /* El nombre SANTO LORENZO devuelve a la portada: quita los filtros y sube arriba */
+  /* El nombre SANTO devuelve a la portada: quita los filtros y sube arriba */
   const volverInicio = document.getElementById('volver-inicio');
   volverInicio.addEventListener('click', () => {
     const habiaFiltros = hayFiltros();
