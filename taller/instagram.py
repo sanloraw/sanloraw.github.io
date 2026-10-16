@@ -64,7 +64,28 @@ RAMA = 'main'                                    # la que sirve GitHub Pages
 RESERVA_CADUCA = timedelta(minutes=20)
 FUENTE = os.path.join(taller.TALLER, 'fuentes', 'Karla.ttf')
 
-SITIO = 'https://sanloraw.github.io'             # de dónde las lee Instagram
+def _sitio():
+    """De dónde lee Instagram los montajes.
+
+    Se deduce del remoto en vez de escribirse a mano: si algún día cambia
+    el nombre de usuario o del repositorio, la dirección se corrige sola y
+    no queda una constante vieja apuntando a una web que ya no existe.
+    GitHub Pages sirve <usuario>.github.io en la raíz cuando el
+    repositorio se llama así, y bajo su nombre en cualquier otro caso."""
+    try:
+        url = taller._git('remote', 'get-url', 'origin', timeout=15).stdout.strip()
+        m = re.search(r'github\.com[:/]+([^/]+)/(.+?)(?:\.git)?$', url)
+        if m:
+            usuario, repo = m.group(1), m.group(2)
+            if repo.lower() == f'{usuario.lower()}.github.io':
+                return f'https://{usuario.lower()}.github.io'
+            return f'https://{usuario.lower()}.github.io/{repo}'
+    except Exception:
+        pass
+    return 'https://sanloraw.github.io'           # por si no hay remoto
+
+
+SITIO = _sitio()
 
 # ─────────────────────────────────────────────────────────────────────
 #  El marco. Estos números están decididos: no se tocan por capricho.
